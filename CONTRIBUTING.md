@@ -1,7 +1,7 @@
 # Contributing
 
 Brigid is open to contributions by anyone. As long as you are a human, you are welcome.\
-This doesn’t mean you can’t use AI - You are expected to be able to explain your code and any decisions made.
+Wankers over Clankers after all. This doesn’t mean you can’t use AI to assist you - However, you are expected to be able to explain your code and any decisions made.
 
 ## Contribution Rules
 
