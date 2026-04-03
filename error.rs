@@ -1,13 +1,13 @@
-pub type $NAMEResult<T> = Result<T, $NAMEError>;
+pub type BrigidResult<T> = Result<T, BrigidError>;
 
 #[derive(Debug)]
-pub enum $NAMEError {
+pub enum BrigidError {
     Generic(String),
     Io(std::io::Error),
 }
 
-impl From<std::io::Error> for $NAMEError {
+impl From<std::io::Error> for BrigidError {
     fn from(err: std::io::Error) -> Self {
-        $NAMEError::Io(err)
+        BrigidError::Io(err)
     }
 }

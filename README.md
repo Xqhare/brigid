@@ -1,12 +1,11 @@
-# $NAME
+# Brigid
 
 TODO:
 
-- Run `bash init.sh`, all needed inputs will be asked for
 - Consider ArgosCI integration
 - Consider needed dependencies in `Cargo.toml`
 
-[Description]
+A library to set up the environment for binary projects
 
 It follows my "All code written by me or part of rust's standard library and libc" philosophy.
 You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_problems/).
@@ -17,16 +16,16 @@ You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_pro
 
 ## Environment
 
-$NAME expects the environment to provide:
+Brigid expects the environment to provide:
 
 - `ls` UNIX command
 
 ## Naming
 
-As with all my projects, $NAME is named after an ancient deity.
+As with all my projects, Brigid is named after an ancient deity.
 Learn more about my naming scheme [here](https://blog.xqhare.net/posts/explaining_the_pantheon/).
 
-[Deity Description]
+Brigid or Brigit (meaning 'exalted one'), is a prominent deity of pre-Christian Celtic mythology. The stories surrounding Brigid are among the most complex of Celtic myths. Brigid was the Celtic goddess of fire, poetry, and prophecy, but she was also associated with water (especially rivers and streams), childbirth, the hearth, and healing.
 
 ## Usage
 
@@ -36,7 +35,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-$NAME = { git = "https://github.com/xqhare/$NAME" }
+Brigid = { git = "https://github.com/xqhare/brigid" }
 ```
 
 ### Example
@@ -47,8 +46,8 @@ $NAME = { git = "https://github.com/xqhare/$NAME" }
 
 ## License
 
-$NAME is distributed under the [MIT](https://github.com/xqhare/$NAME/blob/master/LICENSE) license.
+Brigid is distributed under the [MIT](https://github.com/xqhare/brigid/blob/master/LICENSE) license.
 
 ## Contributing
 
-See [CONTRIBUTING](https://github.com/xqhare/$NAME/blob/master/CONTRIBUTING.md) for contribution guidelines.
+See [CONTRIBUTING](https://github.com/xqhare/brigid/blob/master/CONTRIBUTING.md) for contribution guidelines.

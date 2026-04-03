@@ -1,6 +1,6 @@
 # Contributing
 
-$NAME is open to contributions by anyone. As long as you are a human, you are welcome.\
+Brigid is open to contributions by anyone. As long as you are a human, you are welcome.\
 This doesn’t mean you can’t use AI - You are expected to be able to explain your code and any decisions made.
 
 ## Contribution Rules
@@ -30,19 +30,19 @@ In general documentation should be written in the following format:
 
 # Arguments
 
-* `[Argument Name]` - [Description]
+* `[Argument Name]` - A library to set up the environment for binary projects
 
 # Returns
 
-[Description]
+A library to set up the environment for binary projects
 
 # Errors
 
-[Description]
+A library to set up the environment for binary projects
 
 # Panics
 
-[Description]
+A library to set up the environment for binary projects
 
 # Example
 
