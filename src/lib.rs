@@ -11,7 +11,9 @@
 
 mod builder;
 mod content;
+mod directory;
 mod error;
+mod file;
 mod sys_warning;
 use std::path::PathBuf;
 

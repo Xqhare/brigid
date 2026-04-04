@@ -2,7 +2,10 @@ use std::path::PathBuf;
 
 use athena::process::{IoNiceClass, SchedulerPolicy};
 
-use crate::{Brigid, content::Content, error::BrigidResult, sys_warning::SystemWarning};
+use crate::{
+    Brigid, directory::BrigidDirectory, error::BrigidResult, file::BrigidFile,
+    sys_warning::SystemWarning,
+};
 
 pub struct BrigidBuilder {
     root: PathBuf,
@@ -92,52 +95,6 @@ impl BrigidBuilder {
         todo!()
     }
     pub fn establish(self) -> BrigidResult<Brigid> {
-        todo!()
-    }
-}
-
-pub struct BrigidFile {
-    default_content: Option<Content>,
-    name: String,
-    fallback: bool,
-}
-
-impl BrigidFile {
-    pub fn new(name: &str) -> Self {
-        Self {
-            default_content: None,
-            name: name.to_string(),
-            fallback: false,
-        }
-    }
-    #[must_use]
-    pub fn with_default_content(&mut self, content: Content) -> &mut Self {
-        self.default_content = Some(content);
-        self
-    }
-    /// Only has an effect if `content` is set using `with_default_content`
-    #[must_use]
-    pub fn with_fallback(&mut self) -> &mut Self {
-        if self.default_content.is_some() {
-            self.fallback = true;
-        }
-        self
-    }
-}
-
-pub struct BrigidDirectory {
-    name: String,
-    contents: Vec<BrigidFile>,
-}
-
-impl BrigidDirectory {
-    pub fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            contents: Vec::new(),
-        }
-    }
-    pub fn file(&mut self, name: &str, closure: impl FnOnce(&mut BrigidFile)) -> &mut Self {
         todo!()
     }
 }
