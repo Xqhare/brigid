@@ -5,6 +5,7 @@ use mawu::{MawuContents, mawu_value::MawuValue};
 
 use crate::error::BrigidResult;
 
+#[derive(Debug, Clone)]
 pub enum Content {
     CSV(XffValue),
     XFF(XffValue),

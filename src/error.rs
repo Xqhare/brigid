@@ -8,6 +8,11 @@ pub enum BrigidError {
     Generic(String),
     Mawu(MawuError),
     Nabu(NabuError),
+    Many(Vec<BrigidError>),
+    FileNotFound(String),
+    Csv(String),
+    Json(String),
+    Xff(String),
     Io(std::io::Error),
 }
 

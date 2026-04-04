@@ -26,4 +26,14 @@ impl BrigidDirectory {
         self.directories.push(directory);
         self
     }
+    pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
+        if let Some(file) = self.files.iter().find(|f| f.name() == name) {
+            return Some(file);
+        } else {
+            if let Some(file) = self.directories.iter().find_map(|d| d.get_file(name)) {
+                return Some(file);
+            }
+        }
+        None
+    }
 }
