@@ -14,13 +14,11 @@ impl BrigidFile {
             fallback: false,
         }
     }
-    #[must_use]
     pub fn with_default_content(&mut self, content: Content) -> &mut Self {
         self.default_content = Some(content);
         self
     }
     /// Only has an effect if `content` is set using `with_default_content`
-    #[must_use]
     pub fn with_fallback(&mut self) -> &mut Self {
         if self.default_content.is_some() {
             self.fallback = true;

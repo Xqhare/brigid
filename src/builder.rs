@@ -8,7 +8,8 @@ use crate::{
 };
 
 pub struct BrigidBuilder {
-    root: PathBuf,
+    root_path: PathBuf,
+    root_directory: BrigidDirectory,
     nice_value: Option<u8>,
     io_policy: Option<IoNiceClass>,
     scheduler_policy: Option<SchedulerPolicy>,
@@ -21,8 +22,14 @@ pub struct BrigidBuilder {
 impl BrigidBuilder {
     #[must_use]
     pub fn new<P: Into<PathBuf>>(root: P) -> Self {
+        let root_path = root.into();
         Self {
-            root: root.into(),
+            root_directory: BrigidDirectory::new(
+                root_path
+                    .to_str()
+                    .expect("Failed to convert root path to string"),
+            ),
+            root_path,
             nice_value: None,
             io_policy: None,
             scheduler_policy: None,
@@ -33,7 +40,11 @@ impl BrigidBuilder {
     }
     #[must_use]
     pub fn with_priority(mut self, nice_value: u8) -> Self {
-        // All checking is done inside `.establish()`
+        if nice_value > 20 {
+            self.warnings
+                .push(SystemWarning::PriorityTooHigh(nice_value));
+            return self;
+        }
         self.nice_value = Some(nice_value);
         self
     }
@@ -86,13 +97,13 @@ impl BrigidBuilder {
             .push((license_path, app_name.to_string()));
         self
     }
-    #[must_use]
-    pub fn file(mut self, name: &str, closure: impl FnOnce(&mut BrigidFile)) -> Self {
-        todo!()
+    pub fn file(mut self, name: &str, file: impl FnOnce(&mut BrigidFile)) -> Self {
+        self.root_directory.file(name, file);
+        self
     }
-    #[must_use]
-    pub fn directory(mut self, name: &str, closure: impl FnOnce(&mut BrigidDirectory)) -> Self {
-        todo!()
+    pub fn directory(mut self, name: &str, dir: impl FnOnce(&mut BrigidDirectory)) -> Self {
+        self.root_directory.directory(name, dir);
+        self
     }
     pub fn establish(self) -> BrigidResult<Brigid> {
         todo!()
