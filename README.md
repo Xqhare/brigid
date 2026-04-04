@@ -14,12 +14,6 @@ You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_pro
 
 - No dependencies
 
-## Environment
-
-Brigid expects the environment to provide:
-
-- `ls` UNIX command
-
 ## Naming
 
 As with all my projects, Brigid is named after an ancient deity.
@@ -35,7 +29,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-Brigid = { git = "https://github.com/xqhare/brigid" }
+brigid = { git = "https://github.com/xqhare/brigid" }
 ```
 
 ### Example

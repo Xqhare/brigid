@@ -9,18 +9,40 @@
     clippy::implicit_return
 )]
 
-/// Adds two numbers
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+mod builder;
+mod content;
+mod error;
+mod sys_warning;
+use std::path::PathBuf;
+
+use athena::XffValue;
+/// Remember: IoNiceClass and SchedulerPolicy need to be exposed publicly, rest not
+pub use athena::process::{IoNiceClass, SchedulerPolicy};
+
+use crate::{builder::BrigidBuilder, error::BrigidResult, sys_warning::SystemWarning};
+
+pub struct Brigid {
+    root: PathBuf,
+    system_warnings: Vec<SystemWarning>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+impl Brigid {
+    pub fn new<P: Into<PathBuf>>(root: P) -> BrigidBuilder {
+        BrigidBuilder::new(root)
+    }
+    pub fn has_warnings(&self) -> bool {
+        !self.system_warnings.is_empty()
+    }
+    pub fn no_warnings(&self) -> bool {
+        self.system_warnings.is_empty()
+    }
+    pub fn get_warnings(&self) -> &Vec<SystemWarning> {
+        &self.system_warnings
+    }
+    pub fn get_file(&self, name: &str) -> BrigidResult<XffValue> {
+        todo!()
+    }
+    pub fn get_raw_file(&self, name: &str) -> BrigidResult<Vec<u8>> {
+        todo!()
     }
 }

@@ -8,16 +8,16 @@ edition = "2024"
 # Uncomment the following lines to enable often used dependencies
 
 # Rusty Toolbox
-# athena = { git = "https://github.com/xqhare/athena.git" }
+athena = { git = "https://github.com/xqhare/athena.git", features = ["process"] }
 
 # XffValue only (no dependencies)
 # aequa = { git = "https://github.com/xqhare/aequa.git" }
 
 # Serde for XffValue (Nabu and Mawo reexport `XffValue`)
 # Working with `.xff` files
-# nabu = { git = "https://github.com/xqhare/nabu.git" }
+nabu = { git = "https://github.com/xqhare/nabu.git" }
 # Working with `.json` or `.csv` files
-# mawu = { git = "https://github.com/xqhare/mawu.git" }
+mawu = { git = "https://github.com/xqhare/mawu.git" }
 
 # CSRNG
 # tyche = { git = "https://github.com/xqhare/tyche.git" }
