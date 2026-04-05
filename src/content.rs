@@ -17,17 +17,30 @@ pub enum Content {
 }
 
 impl Content {
-    /// Convert the content into an XffValue
+    /// Convert the content into an `XffValue`.
+    ///
+    /// # Returns
+    ///
+    /// The `XffValue` representation of the content.
     #[must_use]
     pub fn into_xff(self) -> XffValue {
         match self {
             Content::CSV(xff) | Content::XFF(xff) | Content::JSON(xff) => xff,
         }
     }
-    /// Save the content to the specified path
+    /// Save the content to the specified path.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path where the content should be saved.
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` indicating success or failure.
     ///
     /// # Errors
-    /// Returns a BrigidError if the file cannot be saved
+    ///
+    /// Returns a `BrigidError::Mawu` or `BrigidError::Nabu` if the file cannot be saved.
     pub fn save(self, path: &Path) -> BrigidResult<()> {
         match self {
             Content::CSV(xff) => {

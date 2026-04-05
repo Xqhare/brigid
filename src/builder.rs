@@ -30,6 +30,14 @@ pub struct BrigidBuilder {
 
 impl BrigidBuilder {
     /// Create a new `BrigidBuilder` with the specified root path.
+    ///
+    /// # Arguments
+    ///
+    /// * `root` - The root path of the project.
+    ///
+    /// # Returns
+    ///
+    /// A new `BrigidBuilder` instance.
     #[must_use]
     pub fn new<P: Into<PathBuf>>(root: P) -> Self {
         let root_path = root.into();
@@ -48,6 +56,14 @@ impl BrigidBuilder {
         }
     }
     /// Set the nice value for the process (-20 to 19).
+    ///
+    /// # Arguments
+    ///
+    /// * `nice_value` - The nice value to set.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidBuilder` instance.
     #[must_use]
     pub fn with_priority(mut self, nice_value: i8) -> Self {
         if nice_value > 19 {
@@ -64,12 +80,28 @@ impl BrigidBuilder {
         self
     }
     /// Set the I/O scheduling policy.
+    ///
+    /// # Arguments
+    ///
+    /// * `io_policy` - The I/O scheduling policy to set.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidBuilder` instance.
     #[must_use]
     pub fn with_io_policy(mut self, io_policy: IoNiceClass) -> Self {
         self.io_policy = Some(io_policy);
         self
     }
     /// Set the CPU scheduler policy.
+    ///
+    /// # Arguments
+    ///
+    /// * `scheduler_policy` - The CPU scheduler policy to set.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidBuilder` instance.
     #[must_use]
     pub fn with_scheduler_policy(mut self, scheduler_policy: SchedulerPolicy) -> Self {
         self.scheduler_policy = Some(scheduler_policy);
@@ -78,8 +110,13 @@ impl BrigidBuilder {
     /// Set a license file to be copied during establishment.
     ///
     /// # Arguments
+    ///
     /// * `license_path` - Path to the license file on disk.
     /// * `target_path` - Path where the license file should be copied (e.g., `/usr/share/licenses/myapp/copyright`).
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidBuilder` instance.
     #[must_use]
     pub fn add_license<P: Into<PathBuf>, T: Into<PathBuf>>(
         mut self,
@@ -96,12 +133,30 @@ impl BrigidBuilder {
         self
     }
     /// Define a file in the root directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the file.
+    /// * `file` - A closure to configure the `BrigidFile`.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidBuilder` instance.
     #[must_use]
     pub fn file(mut self, name: &str, file: impl FnOnce(&mut BrigidFile)) -> Self {
         self.root_directory.file(name, file);
         self
     }
     /// Define a subdirectory in the root directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the subdirectory.
+    /// * `dir` - A closure to configure the `BrigidDirectory`.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidBuilder` instance.
     #[must_use]
     pub fn directory(mut self, name: &str, dir: impl FnOnce(&mut BrigidDirectory)) -> Self {
         self.root_directory.directory(name, dir);
@@ -109,8 +164,16 @@ impl BrigidBuilder {
     }
     /// Establish the directory structure and apply configurations.
     ///
+    /// This will recursively create all directories and files defined in the builder.
+    /// It will also attempt to apply system-level configurations and persist licenses.
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` containing the established `Brigid` instance.
+    ///
     /// # Errors
-    /// Returns a `BrigidError` if directories cannot be created or files cannot be saved.
+    ///
+    /// Returns a `BrigidError::Io` if directories cannot be created or files cannot be saved.
     pub fn establish(mut self) -> BrigidResult<Brigid> {
         if !self.root_path.exists() {
             std::fs::create_dir_all(&self.root_path).map_err(BrigidError::Io)?;

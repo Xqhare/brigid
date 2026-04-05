@@ -12,6 +12,14 @@ pub struct BrigidDirectory {
 
 impl BrigidDirectory {
     /// Create a new `BrigidDirectory` with the specified name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the directory.
+    ///
+    /// # Returns
+    ///
+    /// A new `BrigidDirectory` instance.
     #[must_use]
     pub fn new(name: &str) -> Self {
         Self {
@@ -21,6 +29,15 @@ impl BrigidDirectory {
         }
     }
     /// Define a file in this directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the file.
+    /// * `file` - A closure to configure the `BrigidFile`.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidDirectory` instance.
     pub fn file(&mut self, name: &str, file: impl FnOnce(&mut BrigidFile)) -> &mut Self {
         let mut b_file = BrigidFile::new(name);
         file(&mut b_file);
@@ -28,6 +45,15 @@ impl BrigidDirectory {
         self
     }
     /// Define a subdirectory in this directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the subdirectory.
+    /// * `dir` - A closure to configure the `BrigidDirectory`.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidDirectory` instance.
     pub fn directory(&mut self, name: &str, dir: impl FnOnce(&mut BrigidDirectory)) -> &mut Self {
         let mut directory = BrigidDirectory::new(name);
         dir(&mut directory);
@@ -35,6 +61,14 @@ impl BrigidDirectory {
         self
     }
     /// Find a file by name or path within this directory (recursive).
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name or path of the file to find.
+    ///
+    /// # Returns
+    ///
+    /// An `Option` containing a reference to the `BrigidFile` if found.
     #[must_use]
     pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
         // 1. Try exact match in current directory (including subpaths if name has '/')
@@ -64,9 +98,7 @@ impl BrigidDirectory {
             let file_path = current_path.join(&file.name);
             file.path = Some(file_path.clone());
             if let Some(content) = &file.default_content {
-                if !file_path.exists() {
-                    content.clone().save(&file_path)?;
-                }
+                content.clone().save(&file_path)?;
             }
         }
 

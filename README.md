@@ -4,7 +4,8 @@ A library to set up and manage local file/directory environments for binary proj
 
 Brigid provides a builder-based API to define directory structures, establish them on disk with default content (CSV, JSON, XFF), and configure system-level process settings like CPU/IO priority and licenses.
 
-It follows the "The Pantheon" philosophy: minimal dependencies, relying only on the Rust standard library and other internal ecosystem crates (`athena`, `nabu`, `mawu`, `aequa`).
+It follows my "All code written by me or part of rust's standard library and libc" philosophy.
+You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_problems/).
 
 ## Features
 

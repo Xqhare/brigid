@@ -48,32 +48,81 @@ pub struct Brigid {
 
 impl Brigid {
     /// Create a new `BrigidBuilder` starting at the given root path.
+    ///
+    /// # Arguments
+    ///
+    /// * `root` - The root path of the project.
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidBuilder` instance to configure the environment.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use brigid::Brigid;
+    /// let builder = Brigid::new("my_app");
+    /// ```
     pub fn new<P: Into<PathBuf>>(root: P) -> BrigidBuilder {
         BrigidBuilder::new(root)
     }
     /// Returns true if there are warnings generated during establishment.
+    ///
+    /// # Returns
+    ///
+    /// `true` if warnings were generated, `false` otherwise.
     #[must_use]
     pub fn has_warnings(&self) -> bool {
         !self.system_warnings.is_empty()
     }
     /// Returns true if there are no warnings.
+    ///
+    /// # Returns
+    ///
+    /// `true` if no warnings were generated, `false` otherwise.
     #[must_use]
     pub fn no_warnings(&self) -> bool {
         self.system_warnings.is_empty()
     }
     /// Get all warnings generated during establishment.
+    ///
+    /// # Returns
+    ///
+    /// A slice of `SystemWarning` generated during the build process.
     #[must_use]
     pub fn get_warnings(&self) -> &[SystemWarning] {
         &self.system_warnings
     }
     /// Get the content of a file as an `XffValue`.
     ///
+    /// This method will attempt to read the file from disk using the inferred or
+    /// explicitly set data type. If the file is missing or corrupted, it will
+    /// attempt to fall back to a specified path or the default content.
+    ///
     /// # Arguments
+    ///
     /// * `name` - The name or path of the file (e.g., "config.json" or "data/db.xff")
     ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` containing the `XffValue`.
+    ///
     /// # Errors
-    /// Returns a `BrigidError` if the file is not found or cannot be parsed,
-    /// unless a fallback was provided.
+    ///
+    /// Returns a `BrigidError::FileNotFound` if the file is not found and no fallback is available.
+    /// Returns `BrigidError::Mawu` or `BrigidError::Nabu` if parsing fails.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use brigid::Brigid;
+    /// # use athena::XffValue;
+    /// # let root = "test_get_file_doc";
+    /// # let brigid = Brigid::new(root).establish().unwrap();
+    /// // Assuming "config.json" was defined and exists
+    /// let val = brigid.get_file("config.json");
+    /// # brigid.delete_all().unwrap();
+    /// ```
     pub fn get_file(&self, name: &str) -> BrigidResult<XffValue> {
         let file = self.file_getter(name)?;
         let path = self.file_path_getter(file)?;
@@ -131,7 +180,19 @@ impl Brigid {
             )),
         }
     }
-    /// Get the raw bytes of a file
+    /// Get the raw bytes of a file.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name or path of the file.
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` containing a `Vec<u8>` of the file's content.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BrigidError::Io` if the file cannot be read from disk.
     pub fn get_raw_file(&self, name: &str) -> BrigidResult<Vec<u8>> {
         let path = self.file_path_getter(self.file_getter(name)?)?;
         return std::fs::read(path).map_err(|err| err.into());
@@ -148,10 +209,19 @@ impl Brigid {
             .get_file(name)
             .ok_or(BrigidError::FileNotFound(name.to_string()))
     }
-    /// Delete all files and directories contained in the root of Brigid
+    /// Delete all files and directories contained in the root of Brigid.
     ///
     /// Use with caution - Will attempt to delete all files and directories contained in the root
-    /// and the root itself
+    /// and the root itself.
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` indicating success or failure.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BrigidError::DeleteRoot` if the root is the filesystem root ("/").
+    /// Returns `BrigidError::Io` if deletion fails.
     pub fn delete_all(&self) -> BrigidResult<()> {
         if self.root == PathBuf::from("/") {
             return Err(BrigidError::DeleteRoot);

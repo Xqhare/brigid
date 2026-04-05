@@ -25,6 +25,14 @@ pub struct BrigidFile {
 
 impl BrigidFile {
     /// Create a new `BrigidFile` with the specified name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the file.
+    ///
+    /// # Returns
+    ///
+    /// A new `BrigidFile` instance.
     #[must_use]
     pub fn new(name: &str) -> Self {
         let mut file = Self {
@@ -51,6 +59,14 @@ impl BrigidFile {
         }
     }
     /// Set the default content and infer the data type.
+    ///
+    /// # Arguments
+    ///
+    /// * `content` - The `Content` to set as default.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidFile` instance.
     pub fn with_default_content(&mut self, content: Content) -> &mut Self {
         match content {
             Content::XFF(_) => self.data_type = Some(DataType::Xff),
@@ -63,6 +79,10 @@ impl BrigidFile {
     /// Enable fallback to default content if the file is missing or corrupted.
     ///
     /// Only has an effect if `content` was set using `with_default_content`.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidFile` instance.
     pub fn with_fallback(&mut self) -> &mut Self {
         if self.default_content.is_some() {
             self.fallback = true;
@@ -70,6 +90,14 @@ impl BrigidFile {
         self
     }
     /// Set a fallback path for this file.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to the fallback file.
+    ///
+    /// # Returns
+    ///
+    /// The `BrigidFile` instance.
     pub fn with_fallback_path<P: Into<PathBuf>>(&mut self, path: P) -> &mut Self {
         self.fallback_path = Some(path.into());
         self
