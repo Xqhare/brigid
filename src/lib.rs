@@ -10,10 +10,13 @@
 )]
 
 mod builder;
+/// Content handling for Brigid files
 pub mod content;
 mod directory;
+/// Error types for Brigid operations
 pub mod error;
 mod file;
+/// System-level warnings and configurations
 pub mod sys_warning;
 use std::path::PathBuf;
 
@@ -29,6 +32,10 @@ use crate::{
     sys_warning::SystemWarning,
 };
 
+/// The main entry point for managing local file and directory structures.
+///
+/// `Brigid` provides a builder-based API to define and establish a directory structure
+/// with default file contents (CSV, JSON, XFF) and system-level configurations.
 pub struct Brigid {
     /// Path to the root directory
     /// Used as the base for all other, not absolute paths
@@ -40,25 +47,33 @@ pub struct Brigid {
 }
 
 impl Brigid {
-    /// Create a new Brigid
+    /// Create a new `BrigidBuilder` starting at the given root path.
     pub fn new<P: Into<PathBuf>>(root: P) -> BrigidBuilder {
         BrigidBuilder::new(root)
     }
-    /// Returns true if there are warnings
+    /// Returns true if there are warnings generated during establishment.
+    #[must_use]
     pub fn has_warnings(&self) -> bool {
         !self.system_warnings.is_empty()
     }
-    /// Returns true if there are no warnings
+    /// Returns true if there are no warnings.
+    #[must_use]
     pub fn no_warnings(&self) -> bool {
         self.system_warnings.is_empty()
     }
-    /// Get all warnings
-    ///
-    /// Returned Vec is empty if there are no warnings
-    pub fn get_warnings(&self) -> &Vec<SystemWarning> {
+    /// Get all warnings generated during establishment.
+    #[must_use]
+    pub fn get_warnings(&self) -> &[SystemWarning] {
         &self.system_warnings
     }
-    /// Get the XffValue of a file
+    /// Get the content of a file as an `XffValue`.
+    ///
+    /// # Arguments
+    /// * `name` - The name or path of the file (e.g., "config.json" or "data/db.xff")
+    ///
+    /// # Errors
+    /// Returns a `BrigidError` if the file is not found or cannot be parsed,
+    /// unless a fallback was provided.
     pub fn get_file(&self, name: &str) -> BrigidResult<XffValue> {
         let file = self.file_getter(name)?;
         let path = self.file_path_getter(file)?;

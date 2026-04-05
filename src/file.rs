@@ -2,13 +2,18 @@ use std::path::PathBuf;
 
 use crate::content::Content;
 
-#[derive(Debug, Clone, Copy)]
+/// Represents the type of data stored in a file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataType {
+    /// XFF format
     Xff,
+    /// CSV format
     Csv,
+    /// JSON format
     Json,
 }
 
+/// Represents a file in the Brigid structure.
 pub struct BrigidFile {
     pub(crate) default_content: Option<Content>,
     pub(crate) data_type: Option<DataType>,
@@ -18,16 +23,18 @@ pub struct BrigidFile {
 }
 
 impl BrigidFile {
+    /// Create a new `BrigidFile` with the specified name.
+    #[must_use]
     pub fn new(name: &str) -> Self {
         Self {
             default_content: None,
             name: name.to_string(),
             fallback: false,
             data_type: None,
-            // If not path is set during build this needs to error
             path: None,
         }
     }
+    /// Set the default content and infer the data type.
     pub fn with_default_content(&mut self, content: Content) -> &mut Self {
         match content {
             Content::XFF(_) => self.data_type = Some(DataType::Xff),
@@ -37,7 +44,9 @@ impl BrigidFile {
         self.default_content = Some(content);
         self
     }
-    /// Only has an effect if `content` is set using `with_default_content`
+    /// Enable fallback to default content if the file is missing or corrupted.
+    ///
+    /// Only has an effect if `content` was set using `with_default_content`.
     pub fn with_fallback(&mut self) -> &mut Self {
         if self.default_content.is_some() {
             self.fallback = true;

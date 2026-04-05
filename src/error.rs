@@ -3,18 +3,29 @@ use nabu::error::NabuError;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
+/// Result type for Brigid operations
 pub type BrigidResult<T> = Result<T, BrigidError>;
 
+/// Represents errors that can occur during Brigid operations
 #[derive(Debug)]
 pub enum BrigidError {
+    /// A generic error with a message
     Generic(String),
+    /// Error from the Mawu crate
     Mawu(MawuError),
+    /// Error from the Nabu crate
     Nabu(NabuError),
+    /// Multiple errors occurred
     Many(Vec<BrigidError>),
+    /// The specified file was not found
     FileNotFound(String),
+    /// An error occurred during CSV processing
     Csv(String),
+    /// An error occurred during JSON processing
     Json(String),
+    /// An error occurred during XFF processing
     Xff(String),
+    /// An I/O error occurred
     Io(std::io::Error),
 }
 

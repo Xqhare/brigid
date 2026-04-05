@@ -3,6 +3,7 @@ use crate::{
     file::BrigidFile,
 };
 
+/// Represents a directory in the Brigid structure.
 pub struct BrigidDirectory {
     pub(crate) name: String,
     pub(crate) files: Vec<BrigidFile>,
@@ -10,6 +11,8 @@ pub struct BrigidDirectory {
 }
 
 impl BrigidDirectory {
+    /// Create a new `BrigidDirectory` with the specified name.
+    #[must_use]
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -17,18 +20,22 @@ impl BrigidDirectory {
             directories: Vec::new(),
         }
     }
+    /// Define a file in this directory.
     pub fn file(&mut self, name: &str, file: impl FnOnce(&mut BrigidFile)) -> &mut Self {
         let mut b_file = BrigidFile::new(name);
         file(&mut b_file);
         self.files.push(b_file);
         self
     }
+    /// Define a subdirectory in this directory.
     pub fn directory(&mut self, name: &str, dir: impl FnOnce(&mut BrigidDirectory)) -> &mut Self {
         let mut directory = BrigidDirectory::new(name);
         dir(&mut directory);
         self.directories.push(directory);
         self
     }
+    /// Find a file by name or path within this directory (recursive).
+    #[must_use]
     pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
         if let Some((dir_name, rest)) = name.split_once('/') {
             if let Some(dir) = self.directories.iter().find(|d| d.name == dir_name) {
