@@ -1,6 +1,7 @@
+use athena::XffValue;
 use brigid::Brigid;
 use brigid::content::Content;
-use athena::XffValue;
+use nabu::xff;
 use std::path::Path;
 
 #[test]
@@ -35,7 +36,7 @@ fn test_fallback() {
     let root = "test_root_fallback";
     let brigid = Brigid::new(root)
         .file("missing.json", |file| {
-            file.with_default_content(Content::JSON(XffValue::Null))
+            file.with_default_content(Content::JSON(xff!("Default value")))
                 .with_fallback();
         })
         .establish()
@@ -44,8 +45,10 @@ fn test_fallback() {
     // Manually delete the file to force fallback
     std::fs::remove_file(Path::new(root).join("missing.json")).unwrap();
 
-    let val = brigid.get_file("missing.json").expect("Failed to get file with fallback");
-    assert_eq!(val, XffValue::Null);
+    let val = brigid
+        .get_file("missing.json")
+        .expect("Failed to get file with fallback");
+    assert_eq!(val, XffValue::from("Default value"));
 
     brigid.delete_all().expect("Failed to delete all");
 }
