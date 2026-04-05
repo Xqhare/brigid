@@ -97,8 +97,10 @@ impl BrigidDirectory {
         for file in &mut self.files {
             let file_path = current_path.join(&file.name);
             file.path = Some(file_path.clone());
-            if let Some(content) = &file.default_content {
-                content.clone().save(&file_path)?;
+            if !file_path.exists() {
+                if let Some(content) = &file.default_content {
+                    content.clone().save(&file_path)?;
+                }
             }
         }
 
