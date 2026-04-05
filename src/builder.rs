@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use athena::process::{IoNiceClass, SchedulerPolicy};
 
 use crate::{
-    Brigid, directory::BrigidDirectory, error::BrigidResult, file::BrigidFile,
+    Brigid,
+    directory::BrigidDirectory,
+    error::{BrigidError, BrigidResult},
+    file::BrigidFile,
     sys_warning::SystemWarning,
 };
 
@@ -13,9 +16,8 @@ pub struct BrigidBuilder {
     nice_value: Option<u8>,
     io_policy: Option<IoNiceClass>,
     scheduler_policy: Option<SchedulerPolicy>,
-    /// Path to license files in the form of `(path, app_name)`
-    license_paths: Vec<(PathBuf, String)>,
-    all_paths: Vec<PathBuf>,
+    /// Source and target path for the license file
+    license_info: Option<(PathBuf, PathBuf)>,
     warnings: Vec<SystemWarning>,
 }
 
@@ -33,8 +35,7 @@ impl BrigidBuilder {
             nice_value: None,
             io_policy: None,
             scheduler_policy: None,
-            license_paths: Vec::new(),
-            all_paths: Vec::new(),
+            license_info: None,
             warnings: Vec::new(),
         }
     }
@@ -58,43 +59,23 @@ impl BrigidBuilder {
         self.scheduler_policy = Some(scheduler_policy);
         self
     }
-    /// If supplying more than one License file, make sure that the filenames themselves are unique; If the same filename is used, the later usage will be dropped
-    /// All Paths are copied to `/usr/share/licenses/<app_name>/copyright` (Failure only warns)
+    /// Set the license file to be copied during establishment
+    ///
+    /// # Arguments
+    /// * `license_path` - Path to the license file on disk
+    /// * `target_path` - Path where the license file should be copied to (e.g. `/usr/share/licenses/myapp/copyright`)
     #[must_use]
-    pub fn add_license<P: Into<PathBuf>>(mut self, license_path: P, app_name: &str) -> Self {
+    pub fn add_license<P: Into<PathBuf>, T: Into<PathBuf>>(
+        mut self,
+        license_path: P,
+        target_path: T,
+    ) -> Self {
         let license_path = license_path.into();
-        if self.all_paths.contains(&license_path) {
-            // Already added; Warn during build
-            self.warnings
-                .push(SystemWarning::LicenseFileExists(license_path));
+        if !license_path.is_file() {
+            // We could warn here or just ignore. The original code ignored.
             return self;
         }
-        let license_name = if let Some(name) = license_path.file_name() {
-            name
-        } else {
-            return self;
-        };
-        // If paths are the same or if the filenames are the same
-        if self.license_paths.iter().any(|(path, name)| {
-            if name == app_name {
-                return true;
-            }
-            if let Some(existing_name) = path.file_name() {
-                if existing_name == license_name {
-                    return true;
-                }
-            }
-            false
-        }) {
-            // Warn during build
-            self.warnings
-                .push(SystemWarning::LicenseFileExists(license_path));
-            return self;
-        }
-
-        self.all_paths.push(license_path.clone());
-        self.license_paths
-            .push((license_path, app_name.to_string()));
+        self.license_info = Some((license_path, target_path.into()));
         self
     }
     pub fn file(mut self, name: &str, file: impl FnOnce(&mut BrigidFile)) -> Self {
@@ -105,7 +86,66 @@ impl BrigidBuilder {
         self.root_directory.directory(name, dir);
         self
     }
-    pub fn establish(self) -> BrigidResult<Brigid> {
-        todo!()
+    pub fn establish(mut self) -> BrigidResult<Brigid> {
+        if !self.root_path.exists() {
+            std::fs::create_dir_all(&self.root_path).map_err(BrigidError::Io)?;
+        }
+
+        self.root_directory.establish(&self.root_path)?;
+
+        if let Some((src, dst)) = self.license_info {
+            if let Err(err) = persist_license(&src, &dst) {
+                self.warnings
+                    .push(SystemWarning::UnableToPersistLicenses(err.to_string()));
+            }
+        }
+
+        self.warnings.extend(process_setup(
+            self.io_policy,
+            self.scheduler_policy,
+            self.nice_value,
+        ));
+
+        Ok(Brigid {
+            root: self.root_path,
+            system_warnings: self.warnings,
+            root_directory: self.root_directory,
+        })
     }
+}
+
+fn process_setup(
+    io_policy: Option<IoNiceClass>,
+    scheduler_policy: Option<SchedulerPolicy>,
+    nice_value: Option<u8>,
+) -> Vec<SystemWarning> {
+    let mut warnings = Vec::new();
+    let nice_value = nice_value.unwrap_or(19);
+    if nice_value > 20 {
+        warnings.push(SystemWarning::PriorityTooHigh(nice_value));
+    }
+    if let Some(policy) = scheduler_policy {
+        if let Err(err) = athena::process::set_scheduler(policy, nice_value as i32) {
+            warnings.push(SystemWarning::UnableToSetSchedulerPolicy(err.to_string()));
+        }
+    }
+    if let Some(policy) = io_policy {
+        if let Err(err) = athena::process::set_ionice_value(policy, nice_value as u32) {
+            warnings.push(SystemWarning::UnableToSetIoPolicy(err.to_string()));
+        }
+    }
+    if let Err(err) = athena::process::set_nice_value(nice_value as i32) {
+        warnings.push(SystemWarning::UnableToSetNiceValue(err.to_string()));
+    }
+    warnings
+}
+
+fn persist_license(src: &PathBuf, dst: &PathBuf) -> std::io::Result<()> {
+    if let Some(parent) = dst.parent() {
+        if !parent.exists() {
+            std::fs::create_dir_all(parent)?;
+        }
+    }
+    std::fs::copy(src, dst)?;
+    Ok(())
 }

@@ -1,9 +1,12 @@
-use crate::file::BrigidFile;
+use crate::{
+    error::{BrigidError, BrigidResult},
+    file::BrigidFile,
+};
 
 pub struct BrigidDirectory {
-    name: String,
-    files: Vec<BrigidFile>,
-    directories: Vec<BrigidDirectory>,
+    pub(crate) name: String,
+    pub(crate) files: Vec<BrigidFile>,
+    pub(crate) directories: Vec<BrigidDirectory>,
 }
 
 impl BrigidDirectory {
@@ -27,13 +30,45 @@ impl BrigidDirectory {
         self
     }
     pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
-        if let Some(file) = self.files.iter().find(|f| f.name() == name) {
+        if let Some((dir_name, rest)) = name.split_once('/') {
+            if let Some(dir) = self.directories.iter().find(|d| d.name == dir_name) {
+                if let Some(file) = dir.get_file(rest) {
+                    return Some(file);
+                }
+            }
+        }
+
+        if let Some(file) = self.files.iter().find(|f| f.name == name) {
             return Some(file);
-        } else {
-            if let Some(file) = self.directories.iter().find_map(|d| d.get_file(name)) {
+        }
+
+        for dir in &self.directories {
+            if let Some(file) = dir.get_file(name) {
                 return Some(file);
             }
         }
+
         None
+    }
+    pub(crate) fn establish(&mut self, current_path: &std::path::Path) -> BrigidResult<()> {
+        for file in &mut self.files {
+            let file_path = current_path.join(&file.name);
+            file.path = Some(file_path.clone());
+            if let Some(content) = &file.default_content {
+                if !file_path.exists() {
+                    content.clone().save(&file_path)?;
+                }
+            }
+        }
+
+        for dir in &mut self.directories {
+            let dir_path = current_path.join(&dir.name);
+            if !dir_path.exists() {
+                std::fs::create_dir_all(&dir_path).map_err(BrigidError::Io)?;
+            }
+            dir.establish(&dir_path)?;
+        }
+
+        Ok(())
     }
 }
