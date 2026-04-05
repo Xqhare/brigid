@@ -1,5 +1,5 @@
 use athena::XffValue;
-use brigid::{content::Content, Brigid};
+use brigid::{Brigid, content::Content};
 use nabu::xff;
 
 fn main() {
@@ -8,7 +8,8 @@ fn main() {
     // 1. Establish the environment with a default file
     let brigid = Brigid::new(app_root)
         .file("config.xff", |file| {
-            file.with_default_content(Content::XFF(xff!("Initial State")));
+            file.with_default_content(Content::XFF(xff!("Initial State")))
+                .with_fallback();
         })
         .establish()
         .expect("Failed to establish");
@@ -42,7 +43,14 @@ fn main() {
         .expect("Failed to delete file");
     assert!(!path.exists());
 
-    // 6. Cleanup the directory
+    // 6. Attempt to get the file again
+    println!("Attempting to get deleted file...");
+    let deleted_content = brigid.get_file("config.xff");
+    // This is fine - there is still a fallback value
+    assert!(deleted_content.is_ok());
+    assert_eq!(deleted_content.unwrap(), XffValue::from("Initial State"));
+
+    // 7. Cleanup the directory
     // This removes the entire root directory and its contents
     brigid.delete_all().expect("Failed to cleanup");
     println!("Persistence example completed successfully!");
