@@ -37,21 +37,23 @@ impl BrigidDirectory {
     /// Find a file by name or path within this directory (recursive).
     #[must_use]
     pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
+        // 1. Try exact match in current directory (including subpaths if name has '/')
         if let Some((dir_name, rest)) = name.split_once('/') {
             if let Some(dir) = self.directories.iter().find(|d| d.name == dir_name) {
                 if let Some(file) = dir.get_file(rest) {
                     return Some(file);
                 }
             }
-        }
-
-        if let Some(file) = self.files.iter().find(|f| f.name == name) {
+        } else if let Some(file) = self.files.iter().find(|f| f.name == name) {
             return Some(file);
         }
 
-        for dir in &self.directories {
-            if let Some(file) = dir.get_file(name) {
-                return Some(file);
+        // 2. Fallback to recursive search ONLY if it's just a filename (no '/')
+        if !name.contains('/') {
+            for dir in &self.directories {
+                if let Some(file) = dir.get_file(name) {
+                    return Some(file);
+                }
             }
         }
 

@@ -20,18 +20,34 @@ pub struct BrigidFile {
     pub(crate) name: String,
     pub(crate) path: Option<PathBuf>,
     pub(crate) fallback: bool,
+    pub(crate) fallback_path: Option<PathBuf>,
 }
 
 impl BrigidFile {
     /// Create a new `BrigidFile` with the specified name.
     #[must_use]
     pub fn new(name: &str) -> Self {
-        Self {
+        let mut file = Self {
             default_content: None,
             name: name.to_string(),
             fallback: false,
+            fallback_path: None,
             data_type: None,
             path: None,
+        };
+        file.try_infer_data_type();
+        file
+    }
+    fn try_infer_data_type(&mut self) {
+        if self.data_type.is_some() {
+            return;
+        }
+        if self.name.ends_with(".json") {
+            self.data_type = Some(DataType::Json);
+        } else if self.name.ends_with(".csv") {
+            self.data_type = Some(DataType::Csv);
+        } else if self.name.ends_with(".xff") {
+            self.data_type = Some(DataType::Xff);
         }
     }
     /// Set the default content and infer the data type.
@@ -51,6 +67,11 @@ impl BrigidFile {
         if self.default_content.is_some() {
             self.fallback = true;
         }
+        self
+    }
+    /// Set a fallback path for this file.
+    pub fn with_fallback_path<P: Into<PathBuf>>(&mut self, path: P) -> &mut Self {
+        self.fallback_path = Some(path.into());
         self
     }
 }

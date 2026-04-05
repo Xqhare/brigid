@@ -31,7 +31,20 @@ impl Content {
     pub fn save(self, path: &Path) -> BrigidResult<()> {
         match self {
             Content::CSV(xff) => {
-                let contents = MawuContents::Csv(MawuValue::CSVArray(vec![vec![xff]]));
+                let mawu_val = if let XffValue::Array(rows) = xff {
+                    let mut csv_rows = Vec::new();
+                    for row in rows.into_iter() {
+                        if let XffValue::Array(cols) = row {
+                            csv_rows.push(cols.into_vec());
+                        } else {
+                            csv_rows.push(vec![row]);
+                        }
+                    }
+                    MawuValue::CSVArray(csv_rows)
+                } else {
+                    MawuValue::CSVArray(vec![vec![xff]])
+                };
+                let contents = MawuContents::Csv(mawu_val);
                 if let Err(err) = mawu::write(path, contents) {
                     return Err(err.into());
                 } else {

@@ -78,7 +78,33 @@ impl Brigid {
         let file = self.file_getter(name)?;
         let path = self.file_path_getter(file)?;
 
-        let result: BrigidResult<XffValue> = match file.data_type {
+        let result = self.try_read_file(path, file.data_type);
+
+        match result {
+            Ok(val) => Ok(val),
+            Err(err) => {
+                // Try fallback path if provided
+                if let Some(fallback_path) = &file.fallback_path {
+                    if let Ok(val) = self.try_read_file(fallback_path.clone(), file.data_type) {
+                        return Ok(val);
+                    }
+                }
+
+                // Try default content fallback
+                if file.fallback {
+                    return Ok(file
+                        .default_content
+                        .clone()
+                        .expect("Verified by has_fallback")
+                        .into_xff());
+                }
+                Err(err)
+            }
+        }
+    }
+
+    fn try_read_file(&self, path: PathBuf, data_type: Option<DataType>) -> BrigidResult<XffValue> {
+        match data_type {
             Some(DataType::Xff) => nabu::serde::read(path).map_err(Into::into),
             Some(DataType::Csv) => match mawu::read::csv_headless(path) {
                 Ok(data) => {
@@ -86,34 +112,23 @@ impl Brigid {
                         .to_csv_array()
                         .ok_or_else(|| BrigidError::Csv("File is not a CSV array".to_string()))?;
 
+                    // If it's 1x1, return the single value, otherwise return the whole array
                     if xff.len() == 1 && xff[0].len() == 1 {
                         Ok(xff[0][0].clone())
                     } else {
-                        Err(BrigidError::Csv(
-                            "File is not a valid Brigid CSV array (must be 1x1)".to_string(),
-                        ))
+                        let rows = xff
+                            .into_iter()
+                            .map(|row| XffValue::Array(row.into()))
+                            .collect::<Vec<XffValue>>();
+                        Ok(XffValue::Array(rows.into()))
                     }
                 }
                 Err(err) => Err(err.into()),
             },
             Some(DataType::Json) => mawu::read::json(path).map_err(Into::into),
-            None => Err(BrigidError::FileNotFound(name.to_string())),
-        };
-
-        match result {
-            Ok(val) => Ok(val),
-            Err(err) => {
-                if file.fallback {
-                    Ok(file
-                        .default_content
-                        .clone()
-                        .expect("Verified by has_fallback")
-                        .into_xff()
-                        .clone())
-                } else {
-                    Err(err)
-                }
-            }
+            None => Err(BrigidError::FileNotFound(
+                path.to_string_lossy().to_string(),
+            )),
         }
     }
     /// Get the raw bytes of a file

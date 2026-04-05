@@ -4,7 +4,9 @@ use std::path::PathBuf;
 #[derive(Debug, Clone)]
 pub enum SystemWarning {
     /// The process priority (nice value) is too high
-    PriorityTooHigh(u8),
+    PriorityTooHigh(i8),
+    /// The process priority (nice value) is too low
+    PriorityTooLow(i8),
     /// An error occurred while persisting a license file
     UnableToPersistLicenses(String),
     /// An error occurred while setting the scheduler policy
@@ -21,6 +23,7 @@ impl std::fmt::Display for SystemWarning {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SystemWarning::PriorityTooHigh(val) => write!(f, "Priority too high: {val}. Max is 19"),
+            SystemWarning::PriorityTooLow(val) => write!(f, "Priority too low: {val}. Min is -20"),
             SystemWarning::UnableToPersistLicenses(msg) => {
                 write!(f, "Unable to persist licenses: {msg}")
             }

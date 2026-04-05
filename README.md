@@ -11,8 +11,9 @@ It follows the "The Pantheon" philosophy: minimal dependencies, relying only on 
 - **Dependency-Free**: Only uses internal ecosystem crates and std.
 - **Environment Establishment**: Define and create complex directory structures recursively.
 - **Default Content**: Save files with initial content in CSV, JSON, or XFF formats.
-- **Robust Access**: Optional fallback to default content if files on disk are corrupted or missing.
-- **System Configuration**: Configure process priority (nice value), CPU scheduler, and I/O scheduling policy.
+- **Data Type Inference**: Automatically infer file formats from extensions (.json, .csv, .xff).
+- **Robust Access**: Optional fallback to default content or other on-disk files if primary files are missing or corrupted.
+- **System Configuration**: Configure process priority (nice value -20 to 19), CPU scheduler, and I/O scheduling policy.
 - **License Persistence**: Automatically copy license files to system locations during establishment.
 - **Non-Fatal Warnings**: Collects system warnings (e.g., if priority cannot be set) instead of panicking.
 
@@ -52,7 +53,7 @@ fn main() {
                 file.with_default_content(Content::XFF(XffValue::Null));
             });
         })
-        .add_license("LICENSE", "/usr/share/licenses/myapp/copyright")
+        .add_license("LICENSE", "my_app_data/copyright")
         .with_priority(19)
         .establish()
         .expect("Failed to establish environment");
@@ -65,6 +66,9 @@ fn main() {
 
     let config = brigid.get_file("config.json").expect("Failed to get config");
     println!("Config: {:?}", config);
+    assert_eq!(config, XffValue::Null);
+    assert!(brigid.no_warnings());
+    assert!(brigid.delete_all().is_ok());
 }
 ```
 

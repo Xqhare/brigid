@@ -16,8 +16,8 @@ pub struct BrigidBuilder {
     root_path: PathBuf,
     /// Structure of the root directory
     root_directory: BrigidDirectory,
-    /// Optional nice value for the process (0-20, default 19)
-    nice_value: Option<u8>,
+    /// Optional nice value for the process (-20 to 19, default 19)
+    nice_value: Option<i8>,
     /// Optional I/O scheduling policy
     io_policy: Option<IoNiceClass>,
     /// Optional CPU scheduler policy
@@ -47,12 +47,17 @@ impl BrigidBuilder {
             warnings: Vec::new(),
         }
     }
-    /// Set the nice value for the process (0-20).
+    /// Set the nice value for the process (-20 to 19).
     #[must_use]
-    pub fn with_priority(mut self, nice_value: u8) -> Self {
-        if nice_value > 20 {
+    pub fn with_priority(mut self, nice_value: i8) -> Self {
+        if nice_value > 19 {
             self.warnings
                 .push(SystemWarning::PriorityTooHigh(nice_value));
+            return self;
+        }
+        if nice_value < -20 {
+            self.warnings
+                .push(SystemWarning::PriorityTooLow(nice_value));
             return self;
         }
         self.nice_value = Some(nice_value);
@@ -137,25 +142,28 @@ impl BrigidBuilder {
 fn process_setup(
     io_policy: Option<IoNiceClass>,
     scheduler_policy: Option<SchedulerPolicy>,
-    nice_value: Option<u8>,
+    nice_value: Option<i8>,
 ) -> Vec<SystemWarning> {
     let mut warnings = Vec::new();
-    let nice_value = nice_value.unwrap_or(19);
-    if nice_value > 20 {
-        warnings.push(SystemWarning::PriorityTooHigh(nice_value));
-    }
+
     if let Some(policy) = scheduler_policy {
-        if let Err(err) = athena::process::set_scheduler(policy, nice_value as i32) {
+        let nv = nice_value.unwrap_or(19);
+        if let Err(err) = athena::process::set_scheduler(policy, nv as i32) {
             warnings.push(SystemWarning::UnableToSetSchedulerPolicy(err.to_string()));
         }
     }
+
     if let Some(policy) = io_policy {
-        if let Err(err) = athena::process::set_ionice_value(policy, nice_value as u32) {
+        let nv = nice_value.unwrap_or(19);
+        if let Err(err) = athena::process::set_ionice_value(policy, nv as u32) {
             warnings.push(SystemWarning::UnableToSetIoPolicy(err.to_string()));
         }
     }
-    if let Err(err) = athena::process::set_nice_value(nice_value as i32) {
-        warnings.push(SystemWarning::UnableToSetNiceValue(err.to_string()));
+
+    if let Some(nv) = nice_value {
+        if let Err(err) = athena::process::set_nice_value(nv as i32) {
+            warnings.push(SystemWarning::UnableToSetNiceValue(err.to_string()));
+        }
     }
     warnings
 }
