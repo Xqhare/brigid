@@ -26,6 +26,7 @@ pub use athena::process::{IoNiceClass, SchedulerPolicy};
 
 use crate::{
     builder::BrigidBuilder,
+    content::Content,
     directory::BrigidDirectory,
     error::{BrigidError, BrigidResult},
     file::{BrigidFile, DataType},
@@ -92,6 +93,65 @@ impl Brigid {
     #[must_use]
     pub fn get_warnings(&self) -> &[SystemWarning] {
         &self.system_warnings
+    }
+    /// Delete a file from disk.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name or path of the file (e.g., "config.json" or "data/db.xff")
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` containing `()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `BrigidError::FileNotFound` if the file-path is not found.
+    /// Returns `BrigidError::Io` if the file cannot be deleted from disk.
+    pub fn delete_file(&self, name: &str) -> BrigidResult<()> {
+        let path = self.get_file_path(name)?;
+        std::fs::remove_file(path).map_err(BrigidError::Io)
+    }
+    /// Update the content of a file.
+    ///
+    /// This only updates the file on disk. Default content is not updated.
+    /// New file is created if it does not exist.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name or path of the file (e.g., "config.json" or "data/db.xff")
+    /// * `new_content` - The new content to be saved in the file.
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` containing `()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `BrigidError::FileNotFound` if the file-path is not found.
+    /// Returns `BrigidError::Io` if the file cannot be written to disk.
+    pub fn update_file(&self, name: &str, new_content: Content) -> BrigidResult<()> {
+        let path = self.get_file_path(name)?;
+        new_content.save(&path)
+    }
+    /// Get the path of a file.
+    ///
+    /// To read the contents of a file, use `get_file`.
+    /// To update the contents of a file, use `update_file`.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name or path of the file (e.g., "config.json" or "data/db.xff")
+    ///
+    /// # Returns
+    ///
+    /// A `BrigidResult` containing the `PathBuf` of the file.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `BrigidError::FileNotFound` if the file is not found.
+    pub fn get_file_path(&self, name: &str) -> BrigidResult<PathBuf> {
+        self.file_path_getter(self.file_getter(name)?)
     }
     /// Get the content of a file as an `XffValue`.
     ///

@@ -1,6 +1,6 @@
 # Brigid
 
-A library to set up and manage local file/directory environments for binary projects within the **Xqhare** ecosystem.
+A library to set up and manage local file/directory environments for binary projects.
 
 Brigid provides a builder-based API to define directory structures, establish them on disk with default content (CSV, JSON, XFF), and configure system-level process settings like CPU/IO priority and licenses.
 
@@ -9,14 +9,14 @@ You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_pro
 
 ## Features
 
-- **Dependency-Free**: Only uses internal ecosystem crates and std.
-- **Environment Establishment**: Define and create complex directory structures recursively.
-- **Default Content**: Save files with initial content in CSV, JSON, or XFF formats.
-- **Data Type Inference**: Automatically infer file formats from extensions (.json, .csv, .xff).
-- **Robust Access**: Optional fallback to default content or other on-disk files if primary files are missing or corrupted.
-- **System Configuration**: Configure process priority (nice value -20 to 19), CPU scheduler, and I/O scheduling policy.
-- **License Persistence**: Automatically copy license files to system locations during establishment.
-- **Non-Fatal Warnings**: Collects system warnings (e.g., if priority cannot be set) instead of panicking.
+- _**Dependency-Free**_: Only uses internal ecosystem crates and std.
+- _**Environment Establishment**_: Define and create complex directory structures recursively.
+- _**Default Content**_: Save files with initial content in CSV, JSON, or XFF formats.
+- _**Data Type Inference**_: Automatically infer file formats from extensions (.json, .csv, .xff).
+- _**Robust Access**_: Optional fallback to default content or other on-disk files if primary files are missing or corrupted.
+- _**System Configuration**_: Configure process priority (nice value -20 to 19), CPU scheduler, and I/O scheduling policy.
+- _**License Persistence**_: Automatically copy license files to system locations during establishment.
+- _**Non-Fatal Warnings**_: Collects system warnings (e.g., if priority cannot be set) instead of panicking.
 
 ## Naming
 
