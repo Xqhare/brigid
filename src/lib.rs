@@ -6,7 +6,14 @@
 #![allow(
     clippy::missing_docs_in_private_items,
     clippy::print_stdout,
-    clippy::implicit_return
+    clippy::implicit_return,
+    clippy::single_call_fn,
+    clippy::str_to_string,
+    clippy::question_mark_used,
+    clippy::indexing_slicing,
+    clippy::pattern_type_mismatch,
+    clippy::arbitrary_source_item_ordering,
+    clippy::doc_paragraphs_missing_punctuation
 )]
 
 mod builder;
@@ -18,11 +25,16 @@ pub mod error;
 mod file;
 /// System-level warnings and configurations
 pub mod sys_warning;
-use std::path::PathBuf;
+use std::{
+    fs::{read, remove_dir_all, remove_file},
+    path::PathBuf,
+};
 
 use athena::XffValue;
-/// Remember: IoNiceClass and SchedulerPolicy need to be exposed publicly, rest not
+/// Reexporting `IoNiceClass` and `SchedulerPolicy`.
+/// Needed if we want to set the scheduler policy of the current process.
 pub use athena::process::{IoNiceClass, SchedulerPolicy};
+use mawu::read::{csv_headless, json};
 
 use crate::{
     builder::BrigidBuilder,
@@ -64,6 +76,8 @@ impl Brigid {
     /// use brigid::Brigid;
     /// let builder = Brigid::new("my_app");
     /// ```
+    #[allow(clippy::new_ret_no_self)]
+    #[inline]
     pub fn new<P: Into<PathBuf>>(root: P) -> BrigidBuilder {
         BrigidBuilder::new(root)
     }
@@ -73,6 +87,7 @@ impl Brigid {
     ///
     /// `true` if warnings were generated, `false` otherwise.
     #[must_use]
+    #[inline]
     pub fn has_warnings(&self) -> bool {
         !self.system_warnings.is_empty()
     }
@@ -82,6 +97,7 @@ impl Brigid {
     ///
     /// `true` if no warnings were generated, `false` otherwise.
     #[must_use]
+    #[inline]
     pub fn no_warnings(&self) -> bool {
         self.system_warnings.is_empty()
     }
@@ -91,6 +107,7 @@ impl Brigid {
     ///
     /// A slice of `SystemWarning` generated during the build process.
     #[must_use]
+    #[inline]
     pub fn get_warnings(&self) -> &[SystemWarning] {
         &self.system_warnings
     }
@@ -108,9 +125,10 @@ impl Brigid {
     ///
     /// Returns a `BrigidError::FileNotFound` if the file-path is not found.
     /// Returns `BrigidError::Io` if the file cannot be deleted from disk.
+    #[inline]
     pub fn delete_file(&self, name: &str) -> BrigidResult<()> {
         let path = self.get_file_path(name)?;
-        std::fs::remove_file(path).map_err(BrigidError::Io)
+        remove_file(path).map_err(BrigidError::Io)
     }
     /// Update the content of a file.
     ///
@@ -130,6 +148,7 @@ impl Brigid {
     ///
     /// Returns a `BrigidError::FileNotFound` if the file-path is not found.
     /// Returns `BrigidError::Io` if the file cannot be written to disk.
+    #[inline]
     pub fn update_file(&self, name: &str, new_content: Content) -> BrigidResult<()> {
         let path = self.get_file_path(name)?;
         new_content.save(&path)
@@ -150,8 +169,9 @@ impl Brigid {
     /// # Errors
     ///
     /// Returns a `BrigidError::FileNotFound` if the file is not found.
+    #[inline]
     pub fn get_file_path(&self, name: &str) -> BrigidResult<PathBuf> {
-        self.file_path_getter(self.file_getter(name)?)
+        file_path_getter(self.file_getter(name)?)
     }
     /// Get the content of a file as an `XffValue`.
     ///
@@ -183,64 +203,34 @@ impl Brigid {
     /// let val = brigid.get_file("config.json");
     /// # brigid.delete_all().unwrap();
     /// ```
+    #[inline]
     pub fn get_file(&self, name: &str) -> BrigidResult<XffValue> {
         let file = self.file_getter(name)?;
-        let path = self.file_path_getter(file)?;
+        let path = file_path_getter(file)?;
 
-        let result = self.try_read_file(path, file.data_type);
+        let result = try_read_file(path, file.data_type);
 
         match result {
             Ok(val) => Ok(val),
             Err(err) => {
                 // Try fallback path if provided
-                if let Some(fallback_path) = &file.fallback_path {
-                    if let Ok(val) = self.try_read_file(fallback_path.clone(), file.data_type) {
-                        return Ok(val);
-                    }
+                if let Some(fallback_path) = &file.fallback_path
+                    && let Ok(val) = try_read_file(fallback_path.clone(), file.data_type)
+                {
+                    return Ok(val);
                 }
 
                 // Try default content fallback
-                if file.fallback {
-                    return Ok(file
-                        .default_content
-                        .clone()
-                        .expect("Verified by has_fallback")
-                        .into_xff());
+                if file.fallback
+                    && let Some(default_content) = &file.default_content
+                {
+                    return Ok(default_content.clone().into_xff());
                 }
                 Err(err)
             }
         }
     }
 
-    fn try_read_file(&self, path: PathBuf, data_type: Option<DataType>) -> BrigidResult<XffValue> {
-        match data_type {
-            Some(DataType::Xff) => nabu::serde::read(path).map_err(Into::into),
-            Some(DataType::Csv) => match mawu::read::csv_headless(path) {
-                Ok(data) => {
-                    let xff = data
-                        .to_csv_array()
-                        .ok_or_else(|| BrigidError::Csv("File is not a CSV array".to_string()))?;
-
-                    // If it's 1x1, return the single value, otherwise return the whole array
-                    if xff.len() == 1 {
-                        if xff[0].len() == 1 {
-                            return Ok(xff[0][0].clone());
-                        }
-                    }
-                    let rows = xff
-                        .into_iter()
-                        .map(|row| XffValue::Array(row.into()))
-                        .collect::<Vec<XffValue>>();
-                    Ok(XffValue::Array(rows.into()))
-                }
-                Err(err) => Err(err.into()),
-            },
-            Some(DataType::Json) => mawu::read::json(path).map_err(Into::into),
-            None => Err(BrigidError::FileNotFound(
-                path.to_string_lossy().to_string(),
-            )),
-        }
-    }
     /// Get the raw bytes of a file.
     ///
     /// # Arguments
@@ -254,17 +244,13 @@ impl Brigid {
     /// # Errors
     ///
     /// Returns `BrigidError::Io` if the file cannot be read from disk.
+    #[allow(clippy::absolute_paths)]
+    #[inline]
     pub fn get_raw_file(&self, name: &str) -> BrigidResult<Vec<u8>> {
-        let path = self.file_path_getter(self.file_getter(name)?)?;
-        return std::fs::read(path).map_err(|err| err.into());
+        let path = file_path_getter(self.file_getter(name)?)?;
+        read(path).map_err(Into::into)
     }
-    fn file_path_getter(&self, file: &BrigidFile) -> BrigidResult<PathBuf> {
-        if let Some(path) = file.path.as_ref() {
-            return Ok(path.to_path_buf());
-        } else {
-            return Err(BrigidError::FileNotFound(file.name.to_string()));
-        }
-    }
+    #[inline]
     fn file_getter(&self, name: &str) -> BrigidResult<&BrigidFile> {
         self.root_directory
             .get_file(name)
@@ -283,13 +269,50 @@ impl Brigid {
     ///
     /// Returns `BrigidError::DeleteRoot` if the root is the filesystem root ("/").
     /// Returns `BrigidError::Io` if deletion fails.
+    #[inline]
     pub fn delete_all(&self) -> BrigidResult<()> {
-        if self.root == PathBuf::from("/") {
+        if self.root == *"/" {
             return Err(BrigidError::DeleteRoot);
         }
-        if let Err(err) = std::fs::remove_dir_all(&self.root) {
+        if let Err(err) = remove_dir_all(&self.root) {
             return Err(err.into());
         }
         Ok(())
+    }
+}
+#[allow(clippy::absolute_paths)]
+fn try_read_file(path: PathBuf, data_type: Option<DataType>) -> BrigidResult<XffValue> {
+    match data_type {
+        Some(DataType::Xff) => nabu::serde::read(path).map_err(Into::into),
+        Some(DataType::Csv) => match csv_headless(path) {
+            Ok(data) => {
+                let xff = data
+                    .to_csv_array()
+                    .ok_or_else(|| BrigidError::Csv("File is not a CSV array".to_string()))?;
+
+                // If it's 1x1, return the single value, otherwise return the whole array
+                if xff.len() == 1 && xff[0].len() == 1 {
+                    return Ok(xff[0][0].clone());
+                }
+                let rows = xff
+                    .into_iter()
+                    .map(|row| XffValue::Array(row.into()))
+                    .collect::<Vec<XffValue>>();
+                Ok(XffValue::Array(rows.into()))
+            }
+            Err(err) => Err(err.into()),
+        },
+        Some(DataType::Json) => json(path).map_err(Into::into),
+        None => Err(BrigidError::FileNotFound(
+            path.to_string_lossy().to_string(),
+        )),
+    }
+}
+#[inline]
+fn file_path_getter(file: &BrigidFile) -> BrigidResult<PathBuf> {
+    if let Some(path) = file.path.as_ref() {
+        Ok(path.clone())
+    } else {
+        Err(BrigidError::FileNotFound(file.name.clone()))
     }
 }
