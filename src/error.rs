@@ -27,6 +27,8 @@ pub enum BrigidError {
     Xff(String),
     /// An I/O error occurred
     Io(std::io::Error),
+    /// The root directory can not be deleted
+    DeleteRoot,
 }
 
 impl Display for BrigidError {
@@ -41,6 +43,7 @@ impl Display for BrigidError {
             BrigidError::Json(s) => write!(f, "JSON error: {s}"),
             BrigidError::Xff(s) => write!(f, "XFF error: {s}"),
             BrigidError::Io(e) => write!(f, "IO error: {e}"),
+            BrigidError::DeleteRoot => write!(f, "Root directory can not be deleted"),
         }
     }
 }

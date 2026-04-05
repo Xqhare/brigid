@@ -138,6 +138,9 @@ impl Brigid {
     /// Use with caution - Will attempt to delete all files and directories contained in the root
     /// and the root itself
     pub fn delete_all(&self) -> BrigidResult<()> {
+        if self.root == PathBuf::from("/") {
+            return Err(BrigidError::DeleteRoot);
+        }
         if let Err(err) = std::fs::remove_dir_all(&self.root) {
             return Err(err.into());
         }
