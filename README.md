@@ -1,18 +1,20 @@
 # Brigid
 
-TODO:
+A library to set up and manage local file/directory environments for binary projects within the **Xqhare** ecosystem.
 
-- Consider ArgosCI integration
-- Consider needed dependencies in `Cargo.toml`
+Brigid provides a builder-based API to define directory structures, establish them on disk with default content (CSV, JSON, XFF), and configure system-level process settings like CPU/IO priority and licenses.
 
-A library to set up the environment for binary projects
-
-It follows my "All code written by me or part of rust's standard library and libc" philosophy.
-You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_problems/).
+It follows the "The Pantheon" philosophy: minimal dependencies, relying only on the Rust standard library and other internal ecosystem crates (`athena`, `nabu`, `mawu`, `aequa`).
 
 ## Features
 
-- No dependencies
+- **Dependency-Free**: Only uses internal ecosystem crates and std.
+- **Environment Establishment**: Define and create complex directory structures recursively.
+- **Default Content**: Save files with initial content in CSV, JSON, or XFF formats.
+- **Robust Access**: Optional fallback to default content if files on disk are corrupted or missing.
+- **System Configuration**: Configure process priority (nice value), CPU scheduler, and I/O scheduling policy.
+- **License Persistence**: Automatically copy license files to system locations during establishment.
+- **Non-Fatal Warnings**: Collects system warnings (e.g., if priority cannot be set) instead of panicking.
 
 ## Naming
 
@@ -35,7 +37,35 @@ brigid = { git = "https://github.com/xqhare/brigid" }
 ### Example
 
 ```rust
+use brigid::Brigid;
+use brigid::content::Content;
+use athena::XffValue;
 
+fn main() {
+    let brigid = Brigid::new("my_app_data")
+        .file("config.json", |file| {
+            file.with_default_content(Content::JSON(XffValue::Null))
+                .with_fallback();
+        })
+        .directory("data", |dir| {
+            dir.file("db.xff", |file| {
+                file.with_default_content(Content::XFF(XffValue::Null));
+            });
+        })
+        .add_license("LICENSE", "/usr/share/licenses/myapp/copyright")
+        .with_priority(19)
+        .establish()
+        .expect("Failed to establish environment");
+
+    if brigid.has_warnings() {
+        for warning in brigid.get_warnings() {
+            println!("Warning: {:?}", warning);
+        }
+    }
+
+    let config = brigid.get_file("config.json").expect("Failed to get config");
+    println!("Config: {:?}", config);
+}
 ```
 
 ## License
