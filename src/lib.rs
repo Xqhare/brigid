@@ -222,15 +222,16 @@ impl Brigid {
                         .ok_or_else(|| BrigidError::Csv("File is not a CSV array".to_string()))?;
 
                     // If it's 1x1, return the single value, otherwise return the whole array
-                    if xff.len() == 1 && xff[0].len() == 1 {
-                        Ok(xff[0][0].clone())
-                    } else {
-                        let rows = xff
-                            .into_iter()
-                            .map(|row| XffValue::Array(row.into()))
-                            .collect::<Vec<XffValue>>();
-                        Ok(XffValue::Array(rows.into()))
+                    if xff.len() == 1 {
+                        if xff[0].len() == 1 {
+                            return Ok(xff[0][0].clone());
+                        }
                     }
+                    let rows = xff
+                        .into_iter()
+                        .map(|row| XffValue::Array(row.into()))
+                        .collect::<Vec<XffValue>>();
+                    Ok(XffValue::Array(rows.into()))
                 }
                 Err(err) => Err(err.into()),
             },
