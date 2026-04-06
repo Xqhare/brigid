@@ -3,9 +3,8 @@
 #![warn(clippy::pedantic)]
 #![warn(clippy::all)]
 #![warn(clippy::restriction)]
-#![allow(
+#![expect(
     clippy::missing_docs_in_private_items,
-    clippy::print_stdout,
     clippy::implicit_return,
     clippy::single_call_fn,
     clippy::str_to_string,
@@ -20,7 +19,10 @@
     clippy::impl_trait_in_params,
     clippy::as_conversions,
     clippy::cast_lossless,
-    clippy::shadow_reuse
+    clippy::shadow_reuse,
+    clippy::blanket_clippy_restriction_lints,
+    clippy::doc_include_without_cfg,
+    reason = "Ignored warnings"
 )]
 
 mod builder;
