@@ -14,7 +14,9 @@
     clippy::pattern_type_mismatch,
     clippy::arbitrary_source_item_ordering,
     clippy::doc_paragraphs_missing_punctuation,
-    clippy::exhaustive_enums
+    clippy::exhaustive_enums,
+    clippy::min_ident_chars,
+    clippy::missing_trait_methods
 )]
 
 mod builder;

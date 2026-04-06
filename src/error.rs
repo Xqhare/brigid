@@ -1,13 +1,15 @@
+use core::error::Error;
+use core::fmt::{Display, Formatter, Result};
 use mawu::errors::MawuError;
 use nabu::error::NabuError;
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
 
 /// Result type for Brigid operations
-pub type BrigidResult<T> = Result<T, BrigidError>;
+#[allow(clippy::absolute_paths)]
+pub type BrigidResult<T> = core::result::Result<T, BrigidError>;
 
 /// Represents errors that can occur during Brigid operations
 #[derive(Debug)]
+#[allow(clippy::absolute_paths, clippy::module_name_repetitions)]
 pub enum BrigidError {
     /// A generic error with a message
     Generic(String),
@@ -32,7 +34,9 @@ pub enum BrigidError {
 }
 
 impl Display for BrigidError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    #[inline]
+    #[allow(clippy::use_debug)]
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             BrigidError::Generic(s) => write!(f, "Generic error: {s}"),
             BrigidError::Mawu(e) => write!(f, "Mawu error: {e}"),
@@ -49,29 +53,40 @@ impl Display for BrigidError {
 }
 
 impl Error for BrigidError {
+    #[inline]
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             BrigidError::Io(e) => Some(e),
             BrigidError::Mawu(e) => Some(e),
             BrigidError::Nabu(e) => Some(e),
-            _ => None,
+            BrigidError::Generic(_)
+            | BrigidError::Many(_)
+            | BrigidError::FileNotFound(_)
+            | BrigidError::Csv(_)
+            | BrigidError::Json(_)
+            | BrigidError::Xff(_)
+            | BrigidError::DeleteRoot => None,
         }
     }
 }
 
+#[allow(clippy::absolute_paths)]
 impl From<std::io::Error> for BrigidError {
+    #[inline]
     fn from(err: std::io::Error) -> Self {
         BrigidError::Io(err)
     }
 }
 
 impl From<MawuError> for BrigidError {
+    #[inline]
     fn from(err: MawuError) -> Self {
         BrigidError::Mawu(err)
     }
 }
 
 impl From<NabuError> for BrigidError {
+    #[inline]
     fn from(err: NabuError) -> Self {
         BrigidError::Nabu(err)
     }
