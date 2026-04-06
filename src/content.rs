@@ -42,7 +42,10 @@ impl Content {
     /// # Errors
     ///
     /// Returns a `BrigidError::Mawu` or `BrigidError::Nabu` if the file cannot be saved.
-    #[allow(clippy::absolute_paths)]
+    #[expect(
+        clippy::absolute_paths,
+        reason = "Functions share the same name `write`"
+    )]
     #[inline]
     pub fn save(self, path: &Path) -> BrigidResult<()> {
         match self {
