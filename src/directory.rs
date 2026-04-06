@@ -6,6 +6,10 @@ use crate::{
 };
 
 /// Represents a directory in the Brigid structure.
+#[expect(
+    clippy::field_scoped_visibility_modifiers,
+    reason = "Intended for internal use"
+)]
 pub struct BrigidDirectory {
     pub(crate) name: String,
     pub(crate) files: Vec<BrigidFile>,
@@ -72,6 +76,7 @@ impl BrigidDirectory {
     ///
     /// An `Option` containing a reference to the `BrigidFile` if found.
     #[must_use]
+    #[expect(clippy::else_if_without_else, reason = "Implicit continue")]
     pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
         // 1. Try exact match in current directory (including subpaths if name has '/')
         if let Some((dir_name, rest)) = name.split_once('/')
