@@ -17,7 +17,10 @@
     clippy::exhaustive_enums,
     clippy::min_ident_chars,
     clippy::missing_trait_methods,
-    clippy::impl_trait_in_params
+    clippy::impl_trait_in_params,
+    clippy::as_conversions,
+    clippy::cast_lossless,
+    clippy::shadow_reuse
 )]
 
 mod builder;

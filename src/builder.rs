@@ -1,6 +1,12 @@
-use std::path::PathBuf;
+use std::{
+    fs::{copy, create_dir_all},
+    io::Result,
+    path::PathBuf,
+};
 
-use athena::process::{IoNiceClass, SchedulerPolicy};
+use athena::process::{
+    IoNiceClass, SchedulerPolicy, set_ionice_value, set_nice_value, set_scheduler,
+};
 
 use crate::{
     Brigid,
@@ -39,6 +45,7 @@ impl BrigidBuilder {
     ///
     /// A new `BrigidBuilder` instance.
     #[must_use]
+    #[allow(clippy::expect_used)]
     pub fn new<P: Into<PathBuf>>(root: P) -> Self {
         let root_path = root.into();
         Self {
@@ -176,7 +183,7 @@ impl BrigidBuilder {
     /// Returns a `BrigidError::Io` if directories cannot be created or files cannot be saved.
     pub fn establish(mut self) -> BrigidResult<Brigid> {
         if !self.root_path.exists() {
-            std::fs::create_dir_all(&self.root_path).map_err(BrigidError::Io)?;
+            create_dir_all(&self.root_path).map_err(BrigidError::Io)?;
         }
 
         self.root_directory.establish(&self.root_path)?;
@@ -202,6 +209,7 @@ impl BrigidBuilder {
     }
 }
 
+#[allow(clippy::cast_sign_loss)]
 fn process_setup(
     io_policy: Option<IoNiceClass>,
     scheduler_policy: Option<SchedulerPolicy>,
@@ -211,32 +219,32 @@ fn process_setup(
 
     if let Some(policy) = scheduler_policy {
         let nv = nice_value.unwrap_or(19);
-        if let Err(err) = athena::process::set_scheduler(policy, nv as i32) {
+        if let Err(err) = set_scheduler(policy, nv as i32) {
             warnings.push(SystemWarning::UnableToSetSchedulerPolicy(err.to_string()));
         }
     }
 
     if let Some(policy) = io_policy {
         let nv = nice_value.unwrap_or(19);
-        if let Err(err) = athena::process::set_ionice_value(policy, nv as u32) {
+        if let Err(err) = set_ionice_value(policy, nv as u32) {
             warnings.push(SystemWarning::UnableToSetIoPolicy(err.to_string()));
         }
     }
 
-    if let Some(nv) = nice_value {
-        if let Err(err) = athena::process::set_nice_value(nv as i32) {
-            warnings.push(SystemWarning::UnableToSetNiceValue(err.to_string()));
-        }
+    if let Some(nv) = nice_value
+        && let Err(err) = set_nice_value(nv as i32)
+    {
+        warnings.push(SystemWarning::UnableToSetNiceValue(err.to_string()));
     }
     warnings
 }
 
-fn persist_license(src: &PathBuf, dst: &PathBuf) -> std::io::Result<()> {
-    if let Some(parent) = dst.parent() {
-        if !parent.exists() {
-            std::fs::create_dir_all(parent)?;
-        }
+fn persist_license(src: &PathBuf, dst: &PathBuf) -> Result<()> {
+    if let Some(parent) = dst.parent()
+        && !parent.exists()
+    {
+        create_dir_all(parent)?;
     }
-    std::fs::copy(src, dst)?;
+    copy(src, dst)?;
     Ok(())
 }
