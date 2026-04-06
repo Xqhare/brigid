@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::content::Content;
 
@@ -50,11 +50,20 @@ impl BrigidFile {
         if self.data_type.is_some() {
             return;
         }
-        if self.name.ends_with(".json") {
+        if Path::new(&self.name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
+        {
             self.data_type = Some(DataType::Json);
-        } else if self.name.ends_with(".csv") {
+        } else if Path::new(&self.name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("csv"))
+        {
             self.data_type = Some(DataType::Csv);
-        } else if self.name.ends_with(".xff") {
+        } else if Path::new(&self.name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("xff"))
+        {
             self.data_type = Some(DataType::Xff);
         }
     }
@@ -72,7 +81,7 @@ impl BrigidFile {
             Content::XFF(_) => self.data_type = Some(DataType::Xff),
             Content::CSV(_) => self.data_type = Some(DataType::Csv),
             Content::JSON(_) => self.data_type = Some(DataType::Json),
-        };
+        }
         self.default_content = Some(content);
         self
     }
