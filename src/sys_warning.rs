@@ -1,3 +1,4 @@
+use core::fmt::{Display, Formatter, Result};
 use std::path::PathBuf;
 
 /// Represents non-fatal warnings that can occur during system operations
@@ -19,8 +20,9 @@ pub enum SystemWarning {
     LicenseSourceNotFound(PathBuf),
 }
 
-impl std::fmt::Display for SystemWarning {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for SystemWarning {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             SystemWarning::PriorityTooHigh(val) => write!(f, "Priority too high: {val}. Max is 19"),
             SystemWarning::PriorityTooLow(val) => write!(f, "Priority too low: {val}. Min is -20"),
@@ -35,7 +37,7 @@ impl std::fmt::Display for SystemWarning {
                 write!(f, "Unable to set nice value: {msg}")
             }
             SystemWarning::LicenseSourceNotFound(path) => {
-                write!(f, "License source not found: {path:?}")
+                write!(f, "License source not found: {}", path.display())
             }
         }
     }

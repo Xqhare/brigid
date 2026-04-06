@@ -13,7 +13,8 @@
     clippy::indexing_slicing,
     clippy::pattern_type_mismatch,
     clippy::arbitrary_source_item_ordering,
-    clippy::doc_paragraphs_missing_punctuation
+    clippy::doc_paragraphs_missing_punctuation,
+    clippy::exhaustive_enums
 )]
 
 mod builder;
