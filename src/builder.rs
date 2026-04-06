@@ -45,7 +45,7 @@ impl BrigidBuilder {
     ///
     /// A new `BrigidBuilder` instance.
     #[must_use]
-    #[allow(clippy::expect_used)]
+    #[expect(clippy::expect_used, reason = "Name has to be string")]
     pub fn new<P: Into<PathBuf>>(root: P) -> Self {
         let root_path = root.into();
         Self {
@@ -209,7 +209,10 @@ impl BrigidBuilder {
     }
 }
 
-#[allow(clippy::cast_sign_loss)]
+#[expect(
+    clippy::cast_sign_loss,
+    reason = "Casting unsigned nice_value to signed"
+)]
 fn process_setup(
     io_policy: Option<IoNiceClass>,
     scheduler_policy: Option<SchedulerPolicy>,
