@@ -14,6 +14,10 @@ pub enum DataType {
 }
 
 /// Represents a file in the Brigid structure.
+#[expect(
+    clippy::field_scoped_visibility_modifiers,
+    reason = "Intended for internal use"
+)]
 pub struct BrigidFile {
     pub(crate) default_content: Option<Content>,
     pub(crate) data_type: Option<DataType>,
@@ -46,6 +50,10 @@ impl BrigidFile {
         file.try_infer_data_type();
         file
     }
+    #[expect(
+        clippy::else_if_without_else,
+        reason = "Infering data type, implicit return"
+    )]
     fn try_infer_data_type(&mut self) {
         if self.data_type.is_some() {
             return;
