@@ -4,12 +4,16 @@ use mawu::errors::MawuError;
 use nabu::error::NabuError;
 
 /// Result type for Brigid operations
-#[allow(clippy::absolute_paths)]
+#[expect(clippy::absolute_paths, reason = "Compiler Type inference")]
 pub type BrigidResult<T> = core::result::Result<T, BrigidError>;
 
 /// Represents errors that can occur during Brigid operations
 #[derive(Debug)]
-#[allow(clippy::absolute_paths, clippy::module_name_repetitions)]
+#[expect(
+    clippy::absolute_paths,
+    clippy::module_name_repetitions,
+    reason = "Compiler Type inference"
+)]
 pub enum BrigidError {
     /// A generic error with a message
     Generic(String),
@@ -35,7 +39,7 @@ pub enum BrigidError {
 
 impl Display for BrigidError {
     #[inline]
-    #[allow(clippy::use_debug)]
+    #[expect(clippy::use_debug, reason = "Displaying many errors")]
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             BrigidError::Generic(s) => write!(f, "Generic error: {s}"),
@@ -70,7 +74,7 @@ impl Error for BrigidError {
     }
 }
 
-#[allow(clippy::absolute_paths)]
+#[expect(clippy::absolute_paths, reason = "Compiler Type inference")]
 impl From<std::io::Error> for BrigidError {
     #[inline]
     fn from(err: std::io::Error) -> Self {
