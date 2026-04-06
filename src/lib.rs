@@ -16,7 +16,8 @@
     clippy::doc_paragraphs_missing_punctuation,
     clippy::exhaustive_enums,
     clippy::min_ident_chars,
-    clippy::missing_trait_methods
+    clippy::missing_trait_methods,
+    clippy::impl_trait_in_params
 )]
 
 mod builder;

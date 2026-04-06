@@ -1,3 +1,5 @@
+use std::{fs::create_dir_all, path::Path};
+
 use crate::{
     error::{BrigidError, BrigidResult},
     file::BrigidFile,
@@ -72,12 +74,11 @@ impl BrigidDirectory {
     #[must_use]
     pub fn get_file(&self, name: &str) -> Option<&BrigidFile> {
         // 1. Try exact match in current directory (including subpaths if name has '/')
-        if let Some((dir_name, rest)) = name.split_once('/') {
-            if let Some(dir) = self.directories.iter().find(|d| d.name == dir_name) {
-                if let Some(file) = dir.get_file(rest) {
-                    return Some(file);
-                }
-            }
+        if let Some((dir_name, rest)) = name.split_once('/')
+            && let Some(dir) = self.directories.iter().find(|d| d.name == dir_name)
+            && let Some(file) = dir.get_file(rest)
+        {
+            return Some(file);
         } else if let Some(file) = self.files.iter().find(|f| f.name == name) {
             return Some(file);
         }
@@ -93,21 +94,21 @@ impl BrigidDirectory {
 
         None
     }
-    pub(crate) fn establish(&mut self, current_path: &std::path::Path) -> BrigidResult<()> {
+    pub(crate) fn establish(&mut self, current_path: &Path) -> BrigidResult<()> {
         for file in &mut self.files {
             let file_path = current_path.join(&file.name);
             file.path = Some(file_path.clone());
-            if !file_path.exists() {
-                if let Some(content) = &file.default_content {
-                    content.clone().save(&file_path)?;
-                }
+            if !file_path.exists()
+                && let Some(content) = &file.default_content
+            {
+                content.clone().save(&file_path)?;
             }
         }
 
         for dir in &mut self.directories {
             let dir_path = current_path.join(&dir.name);
             if !dir_path.exists() {
-                std::fs::create_dir_all(&dir_path).map_err(BrigidError::Io)?;
+                create_dir_all(&dir_path).map_err(BrigidError::Io)?;
             }
             dir.establish(&dir_path)?;
         }
