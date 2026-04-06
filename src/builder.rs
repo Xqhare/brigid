@@ -45,15 +45,10 @@ impl BrigidBuilder {
     ///
     /// A new `BrigidBuilder` instance.
     #[must_use]
-    #[expect(clippy::expect_used, reason = "Name has to be string")]
     pub fn new<P: Into<PathBuf>>(root: P) -> Self {
         let root_path = root.into();
         Self {
-            root_directory: BrigidDirectory::new(
-                root_path
-                    .to_str()
-                    .expect("Failed to convert root path to string"),
-            ),
+            root_directory: BrigidDirectory::new(&root_path.to_string_lossy()),
             root_path,
             nice_value: None,
             io_policy: None,
@@ -211,7 +206,7 @@ impl BrigidBuilder {
 
 #[expect(
     clippy::cast_sign_loss,
-    reason = "Casting unsigned nice_value to signed"
+    reason = "Casting signed nice_value to unsigned"
 )]
 fn process_setup(
     io_policy: Option<IoNiceClass>,
@@ -228,7 +223,15 @@ fn process_setup(
     }
 
     if let Some(policy) = io_policy {
-        let nv = nice_value.unwrap_or(19);
+        let mut nv = nice_value.unwrap_or(7);
+        if nv < 0 {
+            warnings.push(SystemWarning::InvalidIoNiceValue(nv));
+            return warnings;
+        }
+        // If a large nice value is set, I just clamp to 7
+        if nv > 7 {
+            nv = 7;
+        }
         if let Err(err) = set_ionice_value(policy, nv as u32) {
             warnings.push(SystemWarning::UnableToSetIoPolicy(err.to_string()));
         }

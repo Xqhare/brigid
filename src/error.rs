@@ -22,7 +22,6 @@ pub enum BrigidError {
     /// Error from the Nabu crate
     Nabu(NabuError),
     /// Multiple errors occurred
-    Many(Vec<BrigidError>),
     /// The specified file was not found
     FileNotFound(String),
     /// An error occurred during CSV processing
@@ -39,13 +38,11 @@ pub enum BrigidError {
 
 impl Display for BrigidError {
     #[inline]
-    #[expect(clippy::use_debug, reason = "Displaying many errors")]
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             BrigidError::Generic(s) => write!(f, "Generic error: {s}"),
             BrigidError::Mawu(e) => write!(f, "Mawu error: {e}"),
             BrigidError::Nabu(e) => write!(f, "Nabu error: {e}"),
-            BrigidError::Many(v) => write!(f, "Multiple errors: {v:?}"),
             BrigidError::FileNotFound(s) => write!(f, "File not found: {s}"),
             BrigidError::Csv(s) => write!(f, "CSV error: {s}"),
             BrigidError::Json(s) => write!(f, "JSON error: {s}"),
@@ -64,7 +61,6 @@ impl Error for BrigidError {
             BrigidError::Mawu(e) => Some(e),
             BrigidError::Nabu(e) => Some(e),
             BrigidError::Generic(_)
-            | BrigidError::Many(_)
             | BrigidError::FileNotFound(_)
             | BrigidError::Csv(_)
             | BrigidError::Json(_)

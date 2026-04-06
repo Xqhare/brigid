@@ -18,6 +18,8 @@ pub enum SystemWarning {
     UnableToSetNiceValue(String),
     /// The source license file was not found
     LicenseSourceNotFound(PathBuf),
+    /// The specified I/O nice value is invalid - must be between 0 and 7
+    InvalidIoNiceValue(i8),
 }
 
 impl Display for SystemWarning {
@@ -38,6 +40,9 @@ impl Display for SystemWarning {
             }
             SystemWarning::LicenseSourceNotFound(path) => {
                 write!(f, "License source not found: {}", path.display())
+            }
+            SystemWarning::InvalidIoNiceValue(val) => {
+                write!(f, "Invalid I/O nice value: {val}. Must be between 0 and 7")
             }
         }
     }

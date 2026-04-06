@@ -42,7 +42,10 @@ use std::{
 use athena::XffValue;
 /// Reexporting `IoNiceClass` and `SchedulerPolicy`.
 /// Needed if we want to set the scheduler policy of the current process.
-#[expect(clippy::useless_attribute, reason = "Clippy bug?")]
+#[expect(
+    clippy::useless_attribute,
+    reason = "Clippy flags the attribute below as useless? without it, it flags pub use"
+)]
 #[expect(clippy::pub_use, reason = "Public API Reexport")]
 pub use athena::process::{IoNiceClass, SchedulerPolicy};
 use mawu::read::{csv_headless, json};
