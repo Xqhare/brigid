@@ -40,6 +40,8 @@ use std::{
 use athena::XffValue;
 /// Reexporting `IoNiceClass` and `SchedulerPolicy`.
 /// Needed if we want to set the scheduler policy of the current process.
+#[expect(clippy::useless_attribute, reason = "Clippy bug?")]
+#[expect(clippy::pub_use, reason = "Public API Reexport")]
 pub use athena::process::{IoNiceClass, SchedulerPolicy};
 use mawu::read::{csv_headless, json};
 
@@ -83,7 +85,7 @@ impl Brigid {
     /// use brigid::Brigid;
     /// let builder = Brigid::new("my_app");
     /// ```
-    #[allow(clippy::new_ret_no_self)]
+    #[expect(clippy::new_ret_no_self, reason = "Builder pattern")]
     #[inline]
     pub fn new<P: Into<PathBuf>>(root: P) -> BrigidBuilder {
         BrigidBuilder::new(root)
@@ -251,7 +253,6 @@ impl Brigid {
     /// # Errors
     ///
     /// Returns `BrigidError::Io` if the file cannot be read from disk.
-    #[allow(clippy::absolute_paths)]
     #[inline]
     pub fn get_raw_file(&self, name: &str) -> BrigidResult<Vec<u8>> {
         let path = file_path_getter(self.file_getter(name)?)?;
@@ -287,7 +288,10 @@ impl Brigid {
         Ok(())
     }
 }
-#[allow(clippy::absolute_paths)]
+#[expect(
+    clippy::absolute_paths,
+    reason = "`nabu::serde::read` is the same as `std::fs::read`"
+)]
 fn try_read_file(path: PathBuf, data_type: Option<DataType>) -> BrigidResult<XffValue> {
     match data_type {
         Some(DataType::Xff) => nabu::serde::read(path).map_err(Into::into),
