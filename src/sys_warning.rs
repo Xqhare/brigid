@@ -16,10 +16,10 @@ pub enum SystemWarning {
     UnableToSetIoPolicy(String),
     /// An error occurred while setting the nice value
     UnableToSetNiceValue(String),
-    /// The source license file was not found
-    LicenseSourceNotFound(PathBuf),
     /// The specified I/O nice value is invalid - must be between 0 and 7
     InvalidIoNiceValue(i8),
+    /// The specified license target path is a directory - must be a file
+    LicenseTargetDir(PathBuf),
 }
 
 impl Display for SystemWarning {
@@ -38,11 +38,11 @@ impl Display for SystemWarning {
             SystemWarning::UnableToSetNiceValue(msg) => {
                 write!(f, "Unable to set nice value: {msg}")
             }
-            SystemWarning::LicenseSourceNotFound(path) => {
-                write!(f, "License source not found: {}", path.display())
-            }
             SystemWarning::InvalidIoNiceValue(val) => {
                 write!(f, "Invalid I/O nice value: {val}. Must be between 0 and 7")
+            }
+            SystemWarning::LicenseTargetDir(path) => {
+                write!(f, "License target path is a directory: {:?}", path)
             }
         }
     }

@@ -29,7 +29,7 @@ pub struct BrigidBuilder {
     /// Optional CPU scheduler policy
     scheduler_policy: Option<SchedulerPolicy>,
     /// List of license files to persist (source, target)
-    license_info: Vec<(PathBuf, PathBuf)>,
+    license_info: Vec<(String, PathBuf)>,
     /// Warnings collected during the build process
     warnings: Vec<SystemWarning>,
 }
@@ -111,27 +111,30 @@ impl BrigidBuilder {
     }
     /// Set a license file to be copied during establishment.
     ///
+    /// The `target_path` must include the filename.
+    ///
     /// # Arguments
     ///
-    /// * `license_path` - Path to the license file on disk.
-    /// * `target_path` - Path where the license file should be copied (e.g., `/usr/share/licenses/myapp/copyright`).
+    /// * `license` - The license file as a string. Consider using the `include_str!` macro.
+    /// * `target_path` - Path where the license file should be copied (e.g., `/usr/share/licenses/myapp/copyright/license.txt`).
     ///
     /// # Returns
     ///
     /// The `BrigidBuilder` instance.
     #[must_use]
-    pub fn add_license<P: Into<PathBuf>, T: Into<PathBuf>>(
+    pub fn add_license<P: Into<PathBuf>, S: Into<String>>(
         mut self,
-        license_path: P,
-        target_path: T,
+        license: S,
+        target_path: P,
     ) -> Self {
-        let license_path = license_path.into();
-        if !license_path.is_file() {
+        let license = license.into();
+        let target_path = target_path.into();
+        if target_path.is_dir() {
             self.warnings
-                .push(SystemWarning::LicenseSourceNotFound(license_path));
+                .push(SystemWarning::LicenseTargetDir(target_path));
             return self;
         }
-        self.license_info.push((license_path, target_path.into()));
+        self.license_info.push((license, target_path));
         self
     }
     /// Define a file in the root directory.
@@ -245,12 +248,14 @@ fn process_setup(
     warnings
 }
 
-fn persist_license(src: &PathBuf, dst: &PathBuf) -> Result<()> {
+fn persist_license(src: &str, dst: &PathBuf) -> BrigidResult<()> {
     if let Some(parent) = dst.parent()
         && !parent.exists()
     {
         create_dir_all(parent)?;
     }
-    copy(src, dst)?;
-    Ok(())
+    match std::fs::write(dst, src) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(BrigidError::Io(err)),
+    }
 }
