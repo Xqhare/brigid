@@ -95,6 +95,16 @@ impl Brigid {
     pub fn new<P: Into<PathBuf>>(root: P) -> BrigidBuilder {
         BrigidBuilder::new(root)
     }
+    /// Returns the root path of the project.
+    ///
+    /// # Returns
+    ///
+    /// The `PathBuf` of the root directory.
+    #[must_use]
+    #[inline]
+    pub fn get_root(&self) -> &PathBuf {
+        &self.root
+    }
     /// Returns true if there are warnings generated during establishment.
     ///
     /// # Returns
