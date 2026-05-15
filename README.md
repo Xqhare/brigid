@@ -18,6 +18,12 @@ You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_pro
 - _**License Persistence**_: Automatically copy license files to system locations during establishment.
 - _**Non-Fatal Warnings**_: Collects system warnings (e.g., if priority cannot be set) instead of panicking.
 
+## Roadmap
+
+- [ ] Support for several root dirs
+    - To save in `.cache` and `.local` for example without having two separate `Brigid` instances
+- [ ] Support for markdown, text and custom (`Vec<u8>` & `String` = Data & filename) file types
+
 ## Naming
 
 As with all my projects, Brigid is named after an ancient deity.
