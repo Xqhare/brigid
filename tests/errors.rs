@@ -10,8 +10,14 @@ fn test_file_not_found() {
 
     let res = brigid.get_file("non_existent.json");
     match res {
-        Err(BrigidError::FileNotFound(name)) => assert!(name.contains("non_existent.json")),
-        _ => panic!("Expected FileNotFound error, got {:?}", res),
+        Err(err) => {
+            if let Some(BrigidError::FileNotFound(name)) = err.downcast_ref::<BrigidError>() {
+                assert!(name.contains("non_existent.json"));
+            } else {
+                panic!("Expected FileNotFound error, got {:?}", err);
+            }
+        }
+        _ => panic!("Expected error, got {:?}", res),
     }
 
     brigid.delete_all().unwrap();
@@ -27,8 +33,14 @@ fn test_nested_file_not_found() {
 
     let res = brigid.get_file("subdir/missing.json");
     match res {
-        Err(BrigidError::FileNotFound(name)) => assert!(name.contains("missing.json")),
-        _ => panic!("Expected FileNotFound error, got {:?}", res),
+        Err(err) => {
+            if let Some(BrigidError::FileNotFound(name)) = err.downcast_ref::<BrigidError>() {
+                assert!(name.contains("missing.json"));
+            } else {
+                panic!("Expected FileNotFound error, got {:?}", err);
+            }
+        }
+        _ => panic!("Expected error, got {:?}", res),
     }
 
     brigid.delete_all().unwrap();

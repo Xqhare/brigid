@@ -113,7 +113,7 @@ impl BrigidDirectory {
         for dir in &mut self.directories {
             let dir_path = current_path.join(&dir.name);
             if !dir_path.exists() {
-                create_dir_all(&dir_path).map_err(BrigidError::Io)?;
+                create_dir_all(&dir_path).map_err(BrigidError::from)?;
             }
             dir.establish(&dir_path)?;
         }

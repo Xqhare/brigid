@@ -42,11 +42,6 @@ impl Content {
     /// # Errors
     ///
     /// Returns a `BrigidError::Mawu` or `BrigidError::Nabu` if the file cannot be saved.
-    #[expect(
-        clippy::absolute_paths,
-        reason = "Functions share the same name `write`"
-    )]
-    #[inline]
     pub fn save(self, path: &Path) -> BrigidResult<()> {
         match self {
             Content::CSV(xff) => {
@@ -64,26 +59,14 @@ impl Content {
                     MawuValue::CSVArray(vec![vec![xff]])
                 };
                 let contents = MawuContents::Csv(mawu_val);
-                if let Err(err) = mawu::write(path, contents) {
-                    Err(err.into())
-                } else {
-                    Ok(())
-                }
+                mawu::write(path, contents)
             }
             Content::XFF(xff) => {
-                if let Err(err) = nabu::serde::write(path, xff) {
-                    Err(err.into())
-                } else {
-                    Ok(())
-                }
+                nabu::serde::write(path, xff)
             }
             Content::JSON(xff) => {
                 let contents = MawuContents::Json(xff);
-                if let Err(err) = mawu::write_pretty(path, contents, 2) {
-                    Err(err.into())
-                } else {
-                    Ok(())
-                }
+                mawu::write_pretty(path, contents, 2)
             }
         }
     }

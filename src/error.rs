@@ -1,27 +1,18 @@
 use core::error::Error;
 use core::fmt::{Display, Formatter, Result};
-use mawu::errors::MawuError;
-use nabu::error::NabuError;
 
 /// Result type for Brigid operations
-#[expect(clippy::absolute_paths, reason = "Compiler Type inference")]
-pub type BrigidResult<T> = core::result::Result<T, BrigidError>;
+pub type BrigidResult<T> = core::result::Result<T, nemesis::NemesisError>;
 
 /// Represents errors that can occur during Brigid operations
 #[derive(Debug)]
 #[expect(
-    clippy::absolute_paths,
     clippy::module_name_repetitions,
     reason = "Compiler Type inference"
 )]
 pub enum BrigidError {
     /// A generic error with a message
     Generic(String),
-    /// Error from the Mawu crate
-    Mawu(MawuError),
-    /// Error from the Nabu crate
-    Nabu(NabuError),
-    /// Multiple errors occurred
     /// The specified file was not found
     FileNotFound(String),
     /// An error occurred during CSV processing
@@ -41,8 +32,6 @@ impl Display for BrigidError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             BrigidError::Generic(s) => write!(f, "Generic error: {s}"),
-            BrigidError::Mawu(e) => write!(f, "Mawu error: {e}"),
-            BrigidError::Nabu(e) => write!(f, "Nabu error: {e}"),
             BrigidError::FileNotFound(s) => write!(f, "File not found: {s}"),
             BrigidError::Csv(s) => write!(f, "CSV error: {s}"),
             BrigidError::Json(s) => write!(f, "JSON error: {s}"),
@@ -58,8 +47,6 @@ impl Error for BrigidError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             BrigidError::Io(e) => Some(e),
-            BrigidError::Mawu(e) => Some(e),
-            BrigidError::Nabu(e) => Some(e),
             BrigidError::Generic(_)
             | BrigidError::FileNotFound(_)
             | BrigidError::Csv(_)
@@ -70,7 +57,6 @@ impl Error for BrigidError {
     }
 }
 
-#[expect(clippy::absolute_paths, reason = "Compiler Type inference")]
 impl From<std::io::Error> for BrigidError {
     #[inline]
     fn from(err: std::io::Error) -> Self {
@@ -78,16 +64,9 @@ impl From<std::io::Error> for BrigidError {
     }
 }
 
-impl From<MawuError> for BrigidError {
+impl From<BrigidError> for nemesis::NemesisError {
     #[inline]
-    fn from(err: MawuError) -> Self {
-        BrigidError::Mawu(err)
-    }
-}
-
-impl From<NabuError> for BrigidError {
-    #[inline]
-    fn from(err: NabuError) -> Self {
-        BrigidError::Nabu(err)
+    fn from(err: BrigidError) -> Self {
+        nemesis::NemesisError::new("brigid", err)
     }
 }

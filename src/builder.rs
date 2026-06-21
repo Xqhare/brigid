@@ -1,6 +1,5 @@
 use std::{
-    fs::{copy, create_dir_all},
-    io::Result,
+    fs::create_dir_all,
     path::PathBuf,
 };
 
@@ -181,7 +180,7 @@ impl BrigidBuilder {
     /// Returns a `BrigidError::Io` if directories cannot be created or files cannot be saved.
     pub fn establish(mut self) -> BrigidResult<Brigid> {
         if !self.root_path.exists() {
-            create_dir_all(&self.root_path).map_err(BrigidError::Io)?;
+            create_dir_all(&self.root_path).map_err(BrigidError::from)?;
         }
 
         self.root_directory.establish(&self.root_path)?;
@@ -252,10 +251,8 @@ fn persist_license(src: &str, dst: &PathBuf) -> BrigidResult<()> {
     if let Some(parent) = dst.parent()
         && !parent.exists()
     {
-        create_dir_all(parent)?;
+        create_dir_all(parent).map_err(BrigidError::from)?;
     }
-    match std::fs::write(dst, src) {
-        Ok(_) => Ok(()),
-        Err(err) => Err(BrigidError::Io(err)),
-    }
+    std::fs::write(dst, src).map_err(BrigidError::from)?;
+    Ok(())
 }

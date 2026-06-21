@@ -152,7 +152,7 @@ impl Brigid {
     #[inline]
     pub fn delete_file(&self, name: &str) -> BrigidResult<()> {
         let path = self.get_file_path(name)?;
-        remove_file(path).map_err(BrigidError::Io)
+        remove_file(path).map_err(|e| BrigidError::from(e).into())
     }
     /// Update the content of a file.
     ///
@@ -271,13 +271,13 @@ impl Brigid {
     #[inline]
     pub fn get_raw_file(&self, name: &str) -> BrigidResult<Vec<u8>> {
         let path = file_path_getter(self.file_getter(name)?)?;
-        read(path).map_err(Into::into)
+        read(path).map_err(|e| BrigidError::from(e).into())
     }
     #[inline]
     fn file_getter(&self, name: &str) -> BrigidResult<&BrigidFile> {
         self.root_directory
             .get_file(name)
-            .ok_or(BrigidError::FileNotFound(name.to_string()))
+            .ok_or_else(|| nemesis::NemesisError::from(BrigidError::FileNotFound(name.to_string())))
     }
     /// Delete all files and directories contained in the root of Brigid.
     ///
@@ -295,10 +295,10 @@ impl Brigid {
     #[inline]
     pub fn delete_all(&self) -> BrigidResult<()> {
         if self.root == *"/" {
-            return Err(BrigidError::DeleteRoot);
+            return Err(nemesis::NemesisError::from(BrigidError::DeleteRoot));
         }
         if let Err(err) = remove_dir_all(&self.root) {
-            return Err(err.into());
+            return Err(nemesis::NemesisError::from(BrigidError::from(err)));
         }
         Ok(())
     }
@@ -309,12 +309,12 @@ impl Brigid {
 )]
 fn try_read_file(path: PathBuf, data_type: Option<DataType>) -> BrigidResult<XffValue> {
     match data_type {
-        Some(DataType::Xff) => nabu::serde::read(path).map_err(Into::into),
+        Some(DataType::Xff) => nabu::serde::read(path),
         Some(DataType::Csv) => match csv_headless(path) {
             Ok(data) => {
                 let xff = data
                     .to_csv_array()
-                    .ok_or_else(|| BrigidError::Csv("File is not a CSV array".to_string()))?;
+                    .ok_or_else(|| nemesis::NemesisError::from(BrigidError::Csv("File is not a CSV array".to_string())))?;
 
                 // If it's 1x1, return the single value, otherwise return the whole array
                 if xff.len() == 1 && xff[0].len() == 1 {
@@ -326,12 +326,12 @@ fn try_read_file(path: PathBuf, data_type: Option<DataType>) -> BrigidResult<Xff
                     .collect::<Vec<XffValue>>();
                 Ok(XffValue::Array(rows.into()))
             }
-            Err(err) => Err(err.into()),
+            Err(err) => Err(err),
         },
-        Some(DataType::Json) => json(path).map_err(Into::into),
-        None => Err(BrigidError::FileNotFound(
+        Some(DataType::Json) => json(path),
+        None => Err(nemesis::NemesisError::from(BrigidError::FileNotFound(
             path.to_string_lossy().to_string(),
-        )),
+        ))),
     }
 }
 #[inline]
@@ -339,6 +339,6 @@ fn file_path_getter(file: &BrigidFile) -> BrigidResult<PathBuf> {
     if let Some(path) = file.path.as_ref() {
         Ok(path.clone())
     } else {
-        Err(BrigidError::FileNotFound(file.name.clone()))
+        Err(nemesis::NemesisError::from(BrigidError::FileNotFound(file.name.clone())))
     }
 }
