@@ -7,4 +7,4 @@ edition = "2024"
 athena = { git = "https://github.com/xqhare/athena.git", features = ["process"] }
 nabu = { git = "https://github.com/xqhare/nabu.git" }
 mawu = { git = "https://github.com/xqhare/mawu.git" }
-
+nemesis = { git = "https://github.com/xqhare/nemesis.git" }
