@@ -20,10 +20,11 @@ You can learn more about that [here](https://blog.xqhare.net/posts/why_solve_pro
 
 ## Roadmap
 
-- [ ] Support for several root dirs
-    - To save in `.cache` and `.local` for example without having two separate `Brigid` instances
-- [ ] Support for markdown, text and custom (`Vec<u8>` & `String` = Data & filename) file types
+`Brigid` uses my [nomos](https://github.com/xqhare/nomos) project management system.
 
+The roadmap for this project can be found in the [nomos.md](nomos.md) file.
+
+All nomos files follow the syntax defined [here](https://github.com/Xqhare/nomos/blob/master/spec/).
 ## Naming
 
 As with all my projects, Brigid is named after an ancient deity.
